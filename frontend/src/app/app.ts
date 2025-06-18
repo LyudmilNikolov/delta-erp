@@ -4,10 +4,8 @@ import {MatSlideToggle} from "@angular/material/slide-toggle";
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, MatSlideToggle],
-  templateUrl: './app.html',
-  styleUrl: './app.scss'
+  imports: [RouterOutlet],
+  template: ` <router-outlet /> `,
 })
 export class App {
-  protected title = 'delta-erp';
 }
