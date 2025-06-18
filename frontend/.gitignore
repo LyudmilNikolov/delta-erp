@@ -19,6 +19,8 @@ yarn-error.log
 
 # IDEs and editors
 .idea/
+.vscode/*
+.history/*
 .project
 .classpath
 .c9/
@@ -46,3 +48,6 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+/.vscode/extensions.json
+/.vscode/launch.json
+/.vscode/tasks.json
