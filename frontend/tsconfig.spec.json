@@ -9,6 +9,6 @@
     ]
   },
   "include": [
-    "frontend/src/**/*.ts"
+    "src/**/*.ts"
   ]
 }
