@@ -1,0 +1,42 @@
+<div
+  class="upload-box"
+  (drop)="onFileDrop($event)"
+  (dragover)="onDragOver($event)"
+>
+  @if (file()) {
+    <p>{{ file()?.name }}</p>
+  } @else {
+    <p>Drag and drop a file here or click to select</p>
+  }
+
+  <input
+    type="file"
+    hidden
+    #fileInput
+    (change)="onFileSelected($event)"
+  />
+  <button mat-button (click)="fileInput.click()">Select File</button>
+</div>
+
+<div class="actions">
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="triggerUpload()"
+    [disabled]="!file()"
+  >
+    Upload
+  </button>
+</div>
+
+@if (uploadResource.isLoading()) {
+  <div>Uploading...</div>
+}
+
+@if (uploadResource.hasValue()) {
+  <div>Upload complete!</div>
+}
+
+@if (uploadResource.error()) {
+  <div>Upload failed.</div>
+}
