@@ -1,0 +1,11 @@
+mat-card {
+  margin: 16px;
+  padding: 16px;
+  overflow: auto;
+}
+
+mat-header-cell,
+mat-cell {
+  padding: 8px 16px;
+  word-break: break-word;
+}
