@@ -3,4 +3,5 @@ uvicorn
 pandas
 openpyxl
 xlsxwriter
+xlrd
 python-multipart  # for file uploads
