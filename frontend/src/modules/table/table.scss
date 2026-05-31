@@ -1,11 +1,83 @@
 mat-card {
   margin: 16px;
   padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+}
+
+mat-card,
+.table-shell {
+  border-radius: 8px;
+}
+
+.table-header {
+  align-items: flex-start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.table-header h2 {
+  font-size: 20px;
+  line-height: 28px;
+  margin: 0;
+}
+
+.table-header p {
+  color: rgba(0, 0, 0, 0.62);
+  font-size: 13px;
+  margin: 4px 0 0;
+}
+
+.table-shell {
+  border: 1px solid rgba(0, 0, 0, 0.1);
   overflow: auto;
+}
+
+.table-state {
+  border: 1px dashed rgba(0, 0, 0, 0.24);
+  border-radius: 8px;
+  color: rgba(0, 0, 0, 0.62);
+  padding: 24px;
+  text-align: center;
+}
+
+mat-table {
+  min-width: 1180px;
 }
 
 mat-header-cell,
 mat-cell {
   padding: 8px 16px;
   word-break: break-word;
+}
+
+mat-header-cell:first-of-type,
+mat-cell:first-of-type {
+  flex: 0 0 56px;
+  padding-left: 12px;
+  padding-right: 4px;
+}
+
+mat-header-cell:nth-child(4),
+mat-cell:nth-child(4) {
+  flex: 2 1 280px;
+}
+
+@media (max-width: 720px) {
+  mat-card {
+    margin: 8px;
+    padding: 12px;
+  }
+
+  .table-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .table-header button {
+    align-self: flex-start;
+  }
 }

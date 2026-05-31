@@ -1,42 +1,113 @@
-<div
-  class="upload-box"
-  (drop)="onFileDrop($event)"
-  (dragover)="onDragOver($event)"
->
-  @if (file()) {
-    <p>{{ file()?.name }}</p>
-  } @else {
-    <p>Drag and drop a file here or click to select</p>
+<section class="upload-page">
+  <mat-card class="upload-panel">
+    <header class="upload-header">
+      <div>
+        <h2>Upload Excel file</h2>
+        <p>Prepare a local upload draft for backend processing.</p>
+      </div>
+
+      @if (draft()) {
+      <button mat-stroked-button type="button" (click)="clear()">Clear</button>
+      }
+    </header>
+
+    <label
+      class="drop-zone"
+      [class.is-dragging]="isDragging()"
+      [class.has-file]="files().length > 0"
+      (drop)="onDrop($event)"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+    >
+      <input
+        type="file"
+        accept=".xls,.xlsx"
+        multiple
+        (change)="onBrowseSelected($event)"
+      />
+
+      <mat-icon>cloud_upload</mat-icon>
+      <strong>Drop Excel files here</strong>
+      <span>or browse from your computer</span>
+    </label>
+
+    @if (errors().length > 0) {
+    <div class="error-list">
+      @for (error of errors(); track error) {
+      <p>{{ error }}</p>
+      }
+    </div>
+    } @if (files().length > 0) {
+    <div class="file-summary">
+      <div>
+        <span
+          >{{ files().length }} file{{ files().length === 1 ? '' : 's' }}</span
+        >
+        <strong>{{ fileSize(totalSize()) }}</strong>
+      </div>
+      <span
+        >Source: {{ draft()?.source === 'drop' ? 'drag and drop' : 'browse'
+        }}</span
+      >
+    </div>
+
+    <div class="file-list">
+      @for (file of files(); track file.name + file.lastModified) {
+      <article class="file-row">
+        <mat-icon>description</mat-icon>
+        <div>
+          <strong>{{ file.name }}</strong>
+          <span
+            >{{ file.extension || 'file' }} / {{ fileSize(file.size) }}</span
+          >
+        </div>
+        <button
+          mat-icon-button
+          type="button"
+          aria-label="Remove file"
+          (click)="removeFile(file)"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </article>
+      }
+    </div>
+    }
+
+    <footer class="upload-actions">
+      <button
+        mat-raised-button
+        color="primary"
+        type="button"
+        [disabled]="!canSubmit()"
+        (click)="prepareUpload()"
+      >
+        Prepare upload
+      </button>
+      <span>
+        @if (canSubmit()) { Ready to send later. } @else { Choose a valid Excel
+        file. }
+      </span>
+    </footer>
+  </mat-card>
+
+  @if (draft()) {
+  <mat-card class="payload-panel">
+    <h3>Upload draft</h3>
+    <dl>
+      <div>
+        <dt>Status</dt>
+        <dd>{{ draft()?.status }}</dd>
+      </div>
+      <div>
+        <dt>Created</dt>
+        <dd>{{ draft()?.createdAt }}</dd>
+      </div>
+      <div>
+        <dt>Files</dt>
+        <dd>{{ files().length }}</dd>
+      </div>
+    </dl>
+  </mat-card>
   }
-
-  <input
-    type="file"
-    hidden
-    #fileInput
-    (change)="onFileSelected($event)"
-  />
-  <button mat-button (click)="fileInput.click()">Select File</button>
-</div>
-
-<div class="actions">
-  <button
-    mat-raised-button
-    color="primary"
-    (click)="triggerUpload()"
-    [disabled]="!file()"
-  >
-    Upload
-  </button>
-</div>
-
-@if (uploadResource.isLoading()) {
-  <div>Uploading...</div>
-}
-
-@if (uploadResource.hasValue()) {
-  <div>Upload complete!</div>
-}
-
-@if (uploadResource.error()) {
-  <div>Upload failed.</div>
-}
+</section>
