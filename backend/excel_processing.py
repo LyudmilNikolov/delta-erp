@@ -84,7 +84,10 @@ def _excel_engine(path: str) -> str:
 def _read_sheet_with_detected_header(source_path: str, sheet_name: str) -> pd.DataFrame:
     engine = _excel_engine(source_path)
     for header in range(6):
-        df = pd.read_excel(source_path, sheet_name=sheet_name, header=header, engine=engine)
+        try:
+            df = pd.read_excel(source_path, sheet_name=sheet_name, header=header, engine=engine)
+        except Exception:
+            continue
         columns = set(str(column).strip() for column in df.columns)
         if REQUIRED_COLUMNS.issubset(columns):
             df.columns = [_clean_text(column) for column in df.columns]
@@ -93,7 +96,14 @@ def _read_sheet_with_detected_header(source_path: str, sheet_name: str) -> pd.Da
 
 
 def read_microinvest_sheet(source_path: str, sheet_name: str | None = None) -> tuple[str, pd.DataFrame]:
-    excel = pd.ExcelFile(source_path, engine=_excel_engine(source_path))
+    try:
+        excel = pd.ExcelFile(source_path, engine=_excel_engine(source_path))
+    except Exception as exc:
+        raise ProcessingError("Could not read Excel file.") from exc
+
+    if sheet_name and sheet_name not in excel.sheet_names:
+        raise ProcessingError(f"Sheet '{sheet_name}' was not found.")
+
     candidate_sheets = [sheet_name] if sheet_name else []
     if not candidate_sheets and "Microinvest" in excel.sheet_names:
         candidate_sheets.append("Microinvest")
