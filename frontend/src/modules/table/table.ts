@@ -107,6 +107,7 @@ export class Table implements OnInit, OnDestroy {
   ];
   public readonly isLoading = signal(true);
   public readonly pageSize = signal(20);
+  public readonly columnFilters = signal<Record<string, string>>({});
   public readonly selection = new SelectionModel<TableRow>(true, []);
   public readonly warnings = computed(() => this.response()?.warnings ?? []);
   public readonly visibleWarnings = computed(() => this.warnings().slice(0, 5));
@@ -118,6 +119,12 @@ export class Table implements OnInit, OnDestroy {
     const path = this.response()?.excel_file;
     return path?.split('/').pop() ?? 'Резултатен файл';
   });
+  public readonly storedFilterCount = computed(
+    () =>
+      Object.values(this.columnFilters()).filter(
+        (value) => value.trim().length > 0,
+      ).length,
+  );
 
   public readonly columns = computed<TableColumn<TableRow>[]>(() => {
     switch (this.activeView()) {
@@ -158,6 +165,15 @@ export class Table implements OnInit, OnDestroy {
     'select',
     ...this.columns().map((column) => column.key),
   ]);
+  public readonly activeFilterCount = computed(() => {
+    const filters = this.columnFilters();
+    const activeKeys = new Set(
+      this.columns().map((column) => this._sharedFilterKey(column.key)),
+    );
+    return [...activeKeys].filter(
+      (key) => filters[key]?.trim().length > 0,
+    ).length;
+  });
 
   public readonly fullData = computed<TableRow[]>(() => {
     const response = this.response();
@@ -186,9 +202,31 @@ export class Table implements OnInit, OnDestroy {
     }
   });
 
+  public readonly filteredData = computed(() => {
+    const filters = this.columnFilters();
+    const activeFilters = this.columns().filter(
+      (column) =>
+        filters[this._sharedFilterKey(column.key)]?.trim().length > 0,
+    );
+
+    if (activeFilters.length === 0) {
+      return this.fullData();
+    }
+
+    return this.fullData().filter((row) =>
+      activeFilters.every((column) =>
+        this._matchesFilter(
+          row[column.key],
+          column,
+          filters[this._sharedFilterKey(column.key)],
+        ),
+      ),
+    );
+  });
+
   public readonly data = computed(() => {
     const start = this._pageIndex() * this.pageSize();
-    return this.fullData().slice(start, start + this.pageSize());
+    return this.filteredData().slice(start, start + this.pageSize());
   });
 
   public readonly selectedRowsOnPage = computed(() =>
@@ -196,6 +234,9 @@ export class Table implements OnInit, OnDestroy {
   );
 
   public readonly hasRows = computed(() => this.fullData().length > 0);
+  public readonly hasFilteredRows = computed(
+    () => this.filteredData().length > 0,
+  );
 
   public ngOnInit(): void {
     const processedResponse = this._tableDataService.processedExcelResponse();
@@ -215,12 +256,7 @@ export class Table implements OnInit, OnDestroy {
 
   public changeView(view: TableView): void {
     this.activeView.set(view);
-    this._pageIndex.set(0);
-    this.selection.clear();
-
-    if (this._paginator) {
-      this._paginator.firstPage();
-    }
+    this._resetTableState();
   }
 
   public async processAnotherFile(): Promise<void> {
@@ -230,6 +266,40 @@ export class Table implements OnInit, OnDestroy {
 
   public viewAt(index: number): TableView {
     return this.views[index] ?? 'details';
+  }
+
+  public onColumnFilterChange(columnKey: string, event: Event): void {
+    const value = (event.target as HTMLInputElement | HTMLSelectElement).value;
+    const filters = { ...this.columnFilters() };
+    const filterKey = this._sharedFilterKey(columnKey);
+
+    if (value.trim().length > 0) {
+      filters[filterKey] = value;
+    } else {
+      delete filters[filterKey];
+    }
+
+    this.columnFilters.set(filters);
+    this._resetTableState();
+  }
+
+  public filterValue(columnKey: string): string {
+    return this.columnFilters()[this._sharedFilterKey(columnKey)] ?? '';
+  }
+
+  public filterInputType(
+    column: TableColumn<TableRow>,
+  ): 'date' | 'search' {
+    return column.type === 'date' ? 'date' : 'search';
+  }
+
+  public filterPlaceholder(column: TableColumn<TableRow>): string {
+    return column.type === 'number' ? '=, >, <' : 'Филтър';
+  }
+
+  public clearColumnFilters(): void {
+    this.columnFilters.set({});
+    this._resetTableState();
   }
 
   public isPageSelected(): boolean {
@@ -293,6 +363,73 @@ export class Table implements OnInit, OnDestroy {
       isSeasonedOrGround: row.is_seasoned_or_ground,
       partner: row.partner,
     };
+  }
+
+  private _matchesFilter(
+    value: CellValue,
+    column: TableColumn<TableRow>,
+    rawFilter: string,
+  ): boolean {
+    const filter = rawFilter.trim();
+
+    if (value === null || value === undefined || value === '') {
+      return false;
+    }
+
+    if (column.type === 'boolean') {
+      return String(value) === filter;
+    }
+
+    if (column.type === 'date') {
+      return String(value).slice(0, 10) === filter;
+    }
+
+    if (column.type === 'number') {
+      return this._matchesNumberFilter(Number(value), filter);
+    }
+
+    return String(value)
+      .toLocaleLowerCase('bg-BG')
+      .includes(filter.toLocaleLowerCase('bg-BG'));
+  }
+
+  private _sharedFilterKey(columnKey: string): string {
+    return columnKey === 'weightKg' || columnKey === 'total'
+      ? 'weight'
+      : columnKey;
+  }
+
+  private _matchesNumberFilter(value: number, filter: string): boolean {
+    const match = filter.match(/^(<=|>=|<|>|=)?\s*(-?\d+(?:[.,]\d+)?)$/);
+
+    if (!match) {
+      return false;
+    }
+
+    const operator = match[1] ?? '=';
+    const target = Number(match[2].replace(',', '.'));
+
+    switch (operator) {
+      case '<':
+        return value < target;
+      case '<=':
+        return value <= target;
+      case '>':
+        return value > target;
+      case '>=':
+        return value >= target;
+      default:
+        return value === target;
+    }
+  }
+
+  private _resetTableState(): void {
+    this._pageIndex.set(0);
+    this.selection.clear();
+
+    if (this._paginator) {
+      this._paginator.firstPage();
+    }
   }
 
   private _toSheetSummaryTableRow(

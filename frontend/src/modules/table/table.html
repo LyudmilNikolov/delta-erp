@@ -70,16 +70,31 @@
   <div class="table-toolbar">
     <div>
       <h3>Обработени данни</h3>
-      <p>{{ fullData().length }} реда в текущия изглед</p>
+      <p>
+        @if (activeFilterCount() > 0) { {{ filteredData().length }} от
+        {{ fullData().length }} реда } @else { {{ fullData().length }} реда в
+        текущия изглед }
+      </p>
     </div>
-    <button
-      mat-stroked-button
-      type="button"
-      [disabled]="selection.isEmpty()"
-      (click)="selection.clear()"
-    >
-      Изчисти избора
-    </button>
+    <div class="table-toolbar-actions">
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="storedFilterCount() === 0"
+        (click)="clearColumnFilters()"
+      >
+        <mat-icon>filter_alt_off</mat-icon>
+        Изчисти филтрите
+      </button>
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="selection.isEmpty()"
+        (click)="selection.clear()"
+      >
+        Изчисти избора
+      </button>
+    </div>
   </div>
 
   <mat-tab-group
@@ -117,7 +132,31 @@
       @for (column of columns(); track column.key) {
       <ng-container [matColumnDef]="column.key">
         <mat-header-cell *matHeaderCellDef>
-          {{ column.label }}
+          <div class="column-header">
+            <span>{{ column.label }}</span>
+            @if (column.type === 'boolean') {
+            <select
+              class="column-filter"
+              [attr.aria-label]="'Филтър по ' + column.label"
+              [value]="filterValue(column.key)"
+              (change)="onColumnFilterChange(column.key, $event)"
+            >
+              <option value="">Всички</option>
+              <option value="true">Да</option>
+              <option value="false">Не</option>
+            </select>
+            } @else {
+            <input
+              class="column-filter"
+              [type]="filterInputType(column)"
+              [placeholder]="filterPlaceholder(column)"
+              [attr.aria-label]="'Филтър по ' + column.label"
+              [value]="filterValue(column.key)"
+              autocomplete="off"
+              (input)="onColumnFilterChange(column.key, $event)"
+            />
+            }
+          </div>
         </mat-header-cell>
         <mat-cell *matCellDef="let row">
           {{ formatCell(row, column) }}
@@ -133,8 +172,17 @@
     </mat-table>
   </div>
 
+  @if (!hasFilteredRows()) {
+  <div class="table-state filter-empty-state">
+    <span>Няма редове, които отговарят на избраните филтри.</span>
+    <button mat-stroked-button type="button" (click)="clearColumnFilters()">
+      Изчисти филтрите
+    </button>
+  </div>
+  }
+
   <mat-paginator
-    [length]="fullData().length"
+    [length]="filteredData().length"
     [pageSize]="pageSize()"
     [pageSizeOptions]="[10, 20, 50]"
     showFirstLastButtons
