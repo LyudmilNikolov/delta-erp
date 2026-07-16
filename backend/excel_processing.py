@@ -153,7 +153,7 @@ def infer_product_type(description: Any) -> str:
 def classify_group(group: Any) -> str:
     group_text = _clean_text(group).lower()
     if "стоки" in group_text or "амадори" in group_text:
-        return "стоки"
+        return "стока"
     return "произв"
 
 
