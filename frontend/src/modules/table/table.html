@@ -4,36 +4,36 @@
   } @else {
   <header class="result-header">
     <div>
-      <span class="result-status">Processing complete</span>
+      <span class="result-status">Обработката приключи</span>
       <h2>{{ response()?.source_filename }}</h2>
-      <p>Your processed Excel workbook is ready.</p>
+      <p>Резултатният Excel файл е готов.</p>
     </div>
 
     <div class="result-actions">
       <button mat-stroked-button type="button" (click)="processAnotherFile()">
         <mat-icon>upload_file</mat-icon>
-        Process another file
+        Обработи друг файл
       </button>
       @if (downloadUrl()) {
       <a mat-flat-button [href]="downloadUrl()">
         <mat-icon>download</mat-icon>
-        Download Excel
+        Изтегли Excel
       </a>
       }
     </div>
   </header>
 
-  <section class="result-summary" aria-label="Processing summary">
+  <section class="result-summary" aria-label="Обобщение на обработката">
     <div>
-      <span>Rows processed</span>
+      <span>Обработени редове</span>
       <strong>{{ response()?.row_count }}</strong>
     </div>
     <div>
-      <span>Warnings</span>
+      <span>Предупреждения</span>
       <strong>{{ warnings().length }}</strong>
     </div>
     <div>
-      <span>Output file</span>
+      <span>Резултатен файл</span>
       <strong>{{ outputFilename() }}</strong>
     </div>
   </section>
@@ -43,26 +43,25 @@
     <header>
       <mat-icon>warning_amber</mat-icon>
       <div>
-        <h3>Review {{ warnings().length }} processing warning{{ warnings().length === 1 ? '' : 's' }}</h3>
-        <p>The downloaded workbook includes a complete Warnings sheet.</p>
+        <h3>Предупреждения за преглед: {{ warnings().length }}</h3>
+        <p>Пълният списък е включен в изтегления файл.</p>
       </div>
     </header>
 
     <div class="warning-list">
       @for (warning of visibleWarnings(); track warning.row + warning.message) {
       <div class="warning-row">
-        <strong>Row {{ warning.row }}</strong>
+        <strong>Ред {{ warning.row }}</strong>
         <span>{{ warning.message }}</span>
-        <span>{{ warning.product_name || 'Product name unavailable' }}</span>
+        <span>{{ warning.product_name || 'Няма име на стоката' }}</span>
       </div>
       }
     </div>
 
     @if (warnings().length > visibleWarnings().length) {
     <p class="warning-overflow">
-      {{ warnings().length - visibleWarnings().length }} more warning{{
-        warnings().length - visibleWarnings().length === 1 ? '' : 's'
-      }} in the downloaded workbook.
+      Още {{ warnings().length - visibleWarnings().length }} предупреждения са
+      включени в изтегления файл.
     </p>
     }
   </section>
@@ -70,8 +69,8 @@
 
   <div class="table-toolbar">
     <div>
-      <h3>Processed data</h3>
-      <p>{{ fullData().length }} rows in this view</p>
+      <h3>Обработени данни</h3>
+      <p>{{ fullData().length }} реда в текущия изглед</p>
     </div>
     <button
       mat-stroked-button
@@ -79,7 +78,7 @@
       [disabled]="selection.isEmpty()"
       (click)="selection.clear()"
     >
-      Clear selection
+      Изчисти избора
     </button>
   </div>
 
@@ -87,14 +86,14 @@
     [selectedIndex]="views.indexOf(activeView())"
     (selectedIndexChange)="changeView(viewAt($event))"
   >
-    <mat-tab label="Details" />
-    <mat-tab label="Summary" />
-    <mat-tab label="Seasoned" />
-    <mat-tab label="All kg" />
+    <mat-tab label="Детайли" />
+    <mat-tab label="Обобщение" />
+    <mat-tab label="Овкусени" />
+    <mat-tab label="Всички кг" />
   </mat-tab-group>
 
   @if (!hasRows()) {
-  <div class="table-state">No rows to display.</div>
+  <div class="table-state">Няма данни за показване.</div>
   } @else {
   <div class="table-shell">
     <mat-table [dataSource]="data()" class="mat-elevation-z2">
@@ -137,7 +136,7 @@
   <mat-paginator
     [length]="fullData().length"
     [pageSize]="pageSize()"
-    [pageSizeOptions]="[5, 10, 20]"
+    [pageSizeOptions]="[10, 20, 50]"
     showFirstLastButtons
   />
   } }

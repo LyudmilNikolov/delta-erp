@@ -95,7 +95,7 @@ def _source_filename(filename: str | None) -> str:
 def _result_filename(source_filename: str) -> str:
     source_stem = os.path.splitext(source_filename)[0]
     safe_stem = re.sub(r"[^\w.-]+", "_", source_stem).strip("._")[:80]
-    return f"Processed_{safe_stem or 'workbook'}_{uuid.uuid4().hex[:8]}.xlsx"
+    return f"Резултат_{safe_stem or 'файл'}_{uuid.uuid4().hex[:8]}.xlsx"
 
 
 @app.exception_handler(RequestValidationError)
@@ -104,7 +104,7 @@ async def request_validation_exception_handler(
     _exc: RequestValidationError,
 ) -> JSONResponse:
     return api_error(
-        "Invalid request. Upload exactly one Excel file in the 'file' form field.",
+        "Невалидна заявка. Изберете точно един Excel файл.",
         400,
     )
 
@@ -120,14 +120,14 @@ async def process_excel(
     if len(files) != 1:
         for upload in files:
             await upload.close()
-        return api_error("Upload exactly one Excel file.", 400)
+        return api_error("Изберете точно един Excel файл.", 400)
 
     file = files[0]
     source_filename = _source_filename(file.filename)
     extension = os.path.splitext(source_filename)[1].lower()
     if extension not in ALLOWED_EXTENSIONS:
         await file.close()
-        return api_error("Only .xls and .xlsx files are supported.", 400)
+        return api_error("Поддържат се само файлове във формат .xls и .xlsx.", 400)
 
     upload_filename = f"{uuid.uuid4()}{extension}"
     upload_path = os.path.join(OUTPUT_DIR, upload_filename)
@@ -149,7 +149,7 @@ async def process_excel(
     except Exception:
         logger.exception("Unexpected error while processing uploaded Excel file.")
         _remove_file(result_path)
-        return api_error("Unexpected processing error.", 500)
+        return api_error("Възникна неочаквана грешка при обработката.", 500)
     finally:
         _remove_file(upload_path)
         await file.close()
@@ -184,7 +184,7 @@ async def download_file(filename: str):
 
     safe_filename = os.path.basename(filename)
     if safe_filename != filename:
-        return api_error("Invalid filename.", 400)
+        return api_error("Невалидно име на файл.", 400)
 
     path = os.path.join(OUTPUT_DIR, safe_filename)
     if os.path.exists(path):
@@ -193,4 +193,4 @@ async def download_file(filename: str):
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             filename=safe_filename,
         )
-    return api_error("File not found.", 404)
+    return api_error("Файлът не е намерен.", 404)

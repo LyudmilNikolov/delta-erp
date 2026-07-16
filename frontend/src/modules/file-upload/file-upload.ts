@@ -174,11 +174,11 @@ export class FileUpload {
     const errors: string[] = [];
 
     if (files.length === 0) {
-      errors.push('Select an Excel file before continuing.');
+      errors.push('Изберете Excel файл, за да продължите.');
     }
 
     if (files.length > 1) {
-      errors.push('Upload one Excel file at a time.');
+      errors.push('Изберете само един Excel файл.');
     }
 
     const invalidFiles = files.filter(
@@ -186,7 +186,7 @@ export class FileUpload {
     );
 
     if (invalidFiles.length > 0) {
-      errors.push('Only .xls and .xlsx files are supported.');
+      errors.push('Поддържат се само файлове във формат .xls и .xlsx.');
     }
 
     return errors;
@@ -201,6 +201,6 @@ export class FileUpload {
       }
     }
 
-    return 'Could not process this file. Please try again.';
+    return 'Файлът не може да бъде обработен. Опитайте отново.';
   }
 }

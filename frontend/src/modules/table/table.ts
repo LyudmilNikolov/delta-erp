@@ -106,7 +106,7 @@ export class Table implements OnInit, OnDestroy {
     'all_kg',
   ];
   public readonly isLoading = signal(true);
-  public readonly pageSize = signal(5);
+  public readonly pageSize = signal(20);
   public readonly selection = new SelectionModel<TableRow>(true, []);
   public readonly warnings = computed(() => this.response()?.warnings ?? []);
   public readonly visibleWarnings = computed(() => this.warnings().slice(0, 5));
@@ -116,40 +116,40 @@ export class Table implements OnInit, OnDestroy {
   });
   public readonly outputFilename = computed(() => {
     const path = this.response()?.excel_file;
-    return path?.split('/').pop() ?? 'Processed workbook';
+    return path?.split('/').pop() ?? 'Резултатен файл';
   });
 
   public readonly columns = computed<TableColumn<TableRow>[]>(() => {
     switch (this.activeView()) {
       case 'details':
         return [
-          { key: 'date', label: 'Date', type: 'date' },
-          { key: 'documentNo', label: 'Document' },
-          { key: 'code', label: 'Code' },
-          { key: 'productName', label: 'Product' },
-          { key: 'batch', label: 'Batch' },
-          { key: 'quantity', label: 'Quantity', type: 'number' },
-          { key: 'unit', label: 'Unit' },
-          { key: 'weightKg', label: 'Weight kg', type: 'number' },
-          { key: 'productType', label: 'Type' },
-          { key: 'stockType', label: 'Stock' },
-          { key: 'isSeasonedOrGround', label: 'Seasoned', type: 'boolean' },
-          { key: 'partner', label: 'Partner' },
+          { key: 'date', label: 'Дата', type: 'date' },
+          { key: 'documentNo', label: 'Документ' },
+          { key: 'code', label: 'Код' },
+          { key: 'productName', label: 'Стока' },
+          { key: 'batch', label: 'Партида' },
+          { key: 'quantity', label: 'Количество', type: 'number' },
+          { key: 'unit', label: 'Мярка' },
+          { key: 'weightKg', label: 'Тегло, кг', type: 'number' },
+          { key: 'productType', label: 'Вид' },
+          { key: 'stockType', label: 'Категория' },
+          { key: 'isSeasonedOrGround', label: 'Овкусен/млян', type: 'boolean' },
+          { key: 'partner', label: 'Партньор' },
         ];
       case 'sheet1':
         return [
-          { key: 'date', label: 'Date', type: 'date' },
-          { key: 'code', label: 'Code' },
-          { key: 'productName', label: 'Product' },
-          { key: 'productType', label: 'Type' },
-          { key: 'total', label: 'Total kg', type: 'number' },
+          { key: 'date', label: 'Дата', type: 'date' },
+          { key: 'code', label: 'Код' },
+          { key: 'productName', label: 'Стока' },
+          { key: 'productType', label: 'Вид' },
+          { key: 'total', label: 'Общо, кг', type: 'number' },
         ];
       case 'seasoned':
       case 'all_kg':
         return [
-          { key: 'batch', label: 'Batch' },
-          { key: 'productType', label: 'Type' },
-          { key: 'total', label: 'Total kg', type: 'number' },
+          { key: 'batch', label: 'Партида' },
+          { key: 'productType', label: 'Вид' },
+          { key: 'total', label: 'Общо, кг', type: 'number' },
         ];
     }
   });
@@ -261,7 +261,7 @@ export class Table implements OnInit, OnDestroy {
     }
 
     if (column.type === 'boolean') {
-      return value ? 'Yes' : 'No';
+      return value ? 'Да' : 'Не';
     }
 
     if (column.type === 'number' && typeof value === 'number') {

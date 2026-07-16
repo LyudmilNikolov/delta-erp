@@ -1,10 +1,10 @@
 mat-card {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   margin: 16px;
   overflow: hidden;
-  padding: 20px;
+  padding: 16px;
 }
 
 mat-card,
@@ -25,12 +25,12 @@ mat-card,
 .result-header h2,
 .table-toolbar h3,
 .warning-panel h3 {
-  line-height: 28px;
+  line-height: 24px;
   margin: 0;
 }
 
 .result-header h2 {
-  font-size: 22px;
+  font-size: 18px;
   overflow-wrap: anywhere;
 }
 
@@ -44,15 +44,15 @@ mat-card,
 .warning-panel p {
   color: rgba(0, 0, 0, 0.62);
   font-size: 13px;
-  margin: 4px 0 0;
+  margin: 2px 0 0;
 }
 
 .result-status {
   color: #20744a;
   display: block;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .result-actions {
@@ -70,9 +70,9 @@ mat-card,
 
 .result-summary > div {
   display: grid;
-  gap: 6px;
+  gap: 2px;
   min-width: 0;
-  padding: 14px 16px;
+  padding: 8px 12px;
 }
 
 .result-summary > div + div {
@@ -85,12 +85,12 @@ mat-card,
 }
 
 .result-summary strong {
-  font-size: 18px;
+  font-size: 16px;
   overflow-wrap: anywhere;
 }
 
 .result-summary > div:last-child strong {
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .warning-panel {

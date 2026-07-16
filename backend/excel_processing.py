@@ -92,17 +92,19 @@ def _read_sheet_with_detected_header(source_path: str, sheet_name: str) -> pd.Da
         if REQUIRED_COLUMNS.issubset(columns):
             df.columns = [_clean_text(column) for column in df.columns]
             return df
-    raise ProcessingError(f"Sheet '{sheet_name}' does not contain required Microinvest columns.")
+    raise ProcessingError(
+        f"Листът „{sheet_name}“ не съдържа задължителните колони от Microinvest."
+    )
 
 
 def read_microinvest_sheet(source_path: str, sheet_name: str | None = None) -> tuple[str, pd.DataFrame]:
     try:
         excel = pd.ExcelFile(source_path, engine=_excel_engine(source_path))
     except Exception as exc:
-        raise ProcessingError("Could not read Excel file.") from exc
+        raise ProcessingError("Excel файлът не може да бъде прочетен.") from exc
 
     if sheet_name and sheet_name not in excel.sheet_names:
-        raise ProcessingError(f"Sheet '{sheet_name}' was not found.")
+        raise ProcessingError(f"Листът „{sheet_name}“ не е намерен.")
 
     candidate_sheets = [sheet_name] if sheet_name else []
     if not candidate_sheets and "Microinvest" in excel.sheet_names:
@@ -115,7 +117,9 @@ def read_microinvest_sheet(source_path: str, sheet_name: str | None = None) -> t
             return candidate, _read_sheet_with_detected_header(source_path, candidate)
         except ProcessingError as exc:
             errors.append(str(exc))
-    raise ProcessingError("No sheet contains the required Microinvest columns. " + " ".join(errors))
+    raise ProcessingError(
+        "Няма лист със задължителните колони от Microinvest. " + " ".join(errors)
+    )
 
 
 def parse_package_weight_kg(description: Any) -> float:
@@ -166,7 +170,7 @@ def _convert_weight(row: pd.Series, row_number: int, warnings: list[dict[str, An
     if pd.isna(quantity):
         warnings.append({
             "row": row_number,
-            "message": "Missing or invalid quantity.",
+            "message": "Липсващо или невалидно количество.",
             "product_name": _clean_text(description),
         })
         return np.nan
@@ -179,7 +183,7 @@ def _convert_weight(row: pd.Series, row_number: int, warnings: list[dict[str, An
         if pd.isna(package_weight_kg):
             warnings.append({
                 "row": row_number,
-                "message": "Could not parse package weight for piece-based product.",
+                "message": "Теглото на опаковката не може да бъде разпознато за продукт в бройки.",
                 "product_name": _clean_text(description),
             })
             return np.nan
@@ -187,7 +191,7 @@ def _convert_weight(row: pd.Series, row_number: int, warnings: list[dict[str, An
 
     warnings.append({
         "row": row_number,
-        "message": f"Unsupported unit '{_clean_text(row.get('Мярка'))}'.",
+        "message": f"Неподдържана мерна единица „{_clean_text(row.get('Мярка'))}“.",
         "product_name": _clean_text(description),
     })
     return np.nan
@@ -223,7 +227,7 @@ def _build_original_row(row: pd.Series) -> dict[str, Any]:
 def normalize_microinvest(df: pd.DataFrame) -> tuple[pd.DataFrame, list[dict[str, Any]]]:
     missing = sorted(REQUIRED_COLUMNS - set(df.columns))
     if missing:
-        raise ProcessingError(f"Missing required columns: {', '.join(missing)}")
+        raise ProcessingError(f"Липсват задължителни колони: {', '.join(missing)}")
 
     df = df.dropna(how="all").copy()
     df = df[df["Дата"].astype(str).str.strip().ne("Дата")]
@@ -269,7 +273,7 @@ def normalize_microinvest(df: pd.DataFrame) -> tuple[pd.DataFrame, list[dict[str
         if pd.isna(date_value):
             warnings.append({
                 "row": int(index) + 2,
-                "message": "Could not parse date.",
+                "message": "Датата не може да бъде разпозната.",
                 "product_name": normalized.at[index, "product_name"],
             })
 

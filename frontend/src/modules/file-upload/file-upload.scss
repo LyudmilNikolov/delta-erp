@@ -1,9 +1,12 @@
 .upload-page {
+  box-sizing: border-box;
   display: grid;
   gap: 16px;
   grid-template-columns: minmax(0, 900px);
   justify-content: center;
+  overflow-x: hidden;
   padding: 16px;
+  width: 100%;
 }
 
 .upload-page.has-details {
@@ -14,7 +17,10 @@
 .upload-panel,
 .file-details-panel {
   border-radius: 8px;
+  box-sizing: border-box;
+  min-width: 0;
   padding: 20px;
+  width: 100%;
 }
 
 .upload-header {
@@ -43,6 +49,7 @@
   background: #f8fafc;
   border: 2px dashed #7b8da8;
   border-radius: 8px;
+  box-sizing: border-box;
   color: #263447;
   cursor: pointer;
   display: flex;
@@ -56,6 +63,7 @@
     background 160ms ease,
     border-color 160ms ease,
     box-shadow 160ms ease;
+  width: 100%;
 }
 
 .drop-zone input {
