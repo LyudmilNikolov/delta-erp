@@ -1,13 +1,16 @@
-<section class="upload-page">
+<section class="upload-page" [class.has-details]="draft()">
   <mat-card class="upload-panel">
     <header class="upload-header">
       <div>
-        <h2>Upload Excel file</h2>
-        <p>Send one Excel file for backend processing.</p>
+        <h2>Process Excel file</h2>
+        <p>Select a Microinvest export to create the processed workbook.</p>
       </div>
 
       @if (draft()) {
-      <button mat-stroked-button type="button" (click)="clear()">Clear</button>
+      <button mat-stroked-button type="button" (click)="clear()">
+        <mat-icon>delete_outline</mat-icon>
+        Clear
+      </button>
       }
     </header>
 
@@ -26,8 +29,8 @@
       />
 
       <mat-icon>cloud_upload</mat-icon>
-      <strong>Drop one Excel file here</strong>
-      <span>or browse from your computer</span>
+      <strong>Drop an Excel file here</strong>
+      <span>or click to browse your computer</span>
     </label>
 
     @if (errors().length > 0) {
@@ -44,10 +47,7 @@
         >
         <strong>{{ fileSize(totalSize()) }}</strong>
       </div>
-      <span
-        >Source: {{ draft()?.source === 'drop' ? 'drag and drop' : 'browse'
-        }}</span
-      >
+      <span>Ready for processing</span>
     </div>
 
     <div class="file-list">
@@ -81,30 +81,38 @@
         [disabled]="!canSubmit()"
         (click)="upload()"
       >
-        {{ isUploading() ? 'Uploading...' : 'Upload' }}
+        <mat-icon>{{ isUploading() ? 'progress_activity' : 'play_arrow' }}</mat-icon>
+        {{ isUploading() ? 'Processing...' : 'Process file' }}
       </button>
-      <span>
-        @if (isUploading()) { Sending file to backend. } @else if (canSubmit())
-        { Ready to upload. } @else { Choose a valid Excel file. }
+      <span aria-live="polite">
+        @if (isUploading()) { Creating your workbook... } @else if (canSubmit())
+        { Ready to process. } @else { Choose a valid Excel file. }
       </span>
     </footer>
   </mat-card>
 
   @if (draft()) {
-  <mat-card class="payload-panel">
-    <h3>Selected file</h3>
+  <mat-card class="file-details-panel">
+    <h3>File details</h3>
     <dl>
       <div>
+        <dt>Name</dt>
+        <dd>{{ files()[0].name }}</dd>
+      </div>
+      <div>
+        <dt>Size</dt>
+        <dd>{{ fileSize(files()[0].size) }}</dd>
+      </div>
+      <div>
+        <dt>Format</dt>
+        <dd>{{ files()[0].extension.toUpperCase() }}</dd>
+      </div>
+      <div>
         <dt>Status</dt>
-        <dd>{{ isUploading() ? 'uploading' : draft()?.status }}</dd>
-      </div>
-      <div>
-        <dt>Selected</dt>
-        <dd>{{ draft()?.createdAt }}</dd>
-      </div>
-      <div>
-        <dt>Files</dt>
-        <dd>{{ files().length }}</dd>
+        <dd>
+          @if (isUploading()) { Processing } @else if (draft()?.status ===
+          'ready') { Ready } @else { Needs attention }
+        </dd>
       </div>
     </dl>
   </mat-card>

@@ -10,7 +10,8 @@ import {
 } from '@angular/core';
 import { SelectionModel } from '@angular/cdk/collections';
 import { MatCard } from '@angular/material/card';
-import { MatButton } from '@angular/material/button';
+import { MatAnchor, MatButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
 import {
   MatCell,
   MatCellDef,
@@ -27,7 +28,9 @@ import { MatCheckbox } from '@angular/material/checkbox';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatProgressBar } from '@angular/material/progress-bar';
 import { MatTab, MatTabGroup } from '@angular/material/tabs';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { FileUploadService } from '../file-upload/services/file-upload';
 import { TableDataService } from './services/table-data';
 import {
   DetailRow,
@@ -48,8 +51,10 @@ interface TableRow {
 @Component({
   selector: 'app-table',
   imports: [
+    MatAnchor,
     MatButton,
     MatCard,
+    MatIcon,
     MatTable,
     MatHeaderCell,
     MatCheckbox,
@@ -86,6 +91,8 @@ export class Table implements OnInit, OnDestroy {
   }
 
   private readonly _tableDataService = inject(TableDataService);
+  private readonly _fileUploadService = inject(FileUploadService);
+  private readonly _router = inject(Router);
   private readonly _pageIndex = signal(0);
   private _paginator?: MatPaginator;
   private _paginatorSubscription?: Subscription;
@@ -99,9 +106,18 @@ export class Table implements OnInit, OnDestroy {
     'all_kg',
   ];
   public readonly isLoading = signal(true);
-  public readonly error = signal<string | null>(null);
   public readonly pageSize = signal(5);
   public readonly selection = new SelectionModel<TableRow>(true, []);
+  public readonly warnings = computed(() => this.response()?.warnings ?? []);
+  public readonly visibleWarnings = computed(() => this.warnings().slice(0, 5));
+  public readonly downloadUrl = computed(() => {
+    const path = this.response()?.excel_file;
+    return path ? this._fileUploadService.resolveApiUrl(path) : null;
+  });
+  public readonly outputFilename = computed(() => {
+    const path = this.response()?.excel_file;
+    return path?.split('/').pop() ?? 'Processed workbook';
+  });
 
   public readonly columns = computed<TableColumn<TableRow>[]>(() => {
     switch (this.activeView()) {
@@ -190,7 +206,7 @@ export class Table implements OnInit, OnDestroy {
       return;
     }
 
-    void this._loadMockData();
+    void this._router.navigate(['/file-upload']);
   }
 
   public ngOnDestroy(): void {
@@ -205,6 +221,11 @@ export class Table implements OnInit, OnDestroy {
     if (this._paginator) {
       this._paginator.firstPage();
     }
+  }
+
+  public async processAnotherFile(): Promise<void> {
+    this._tableDataService.clearProcessedExcelResponse();
+    await this._router.navigate(['/file-upload']);
   }
 
   public viewAt(index: number): TableView {
@@ -254,20 +275,6 @@ export class Table implements OnInit, OnDestroy {
     }
 
     return String(value);
-  }
-
-  private async _loadMockData(): Promise<void> {
-    this.isLoading.set(true);
-    this.error.set(null);
-
-    try {
-      const response = await this._tableDataService.getProcessedExcelMock();
-      this.response.set(response);
-    } catch {
-      this.error.set('Could not load the example backend response.');
-    } finally {
-      this.isLoading.set(false);
-    }
   }
 
   private _toDetailTableRow(row: DetailRow, index: number): TableRow {

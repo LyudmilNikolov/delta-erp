@@ -19,4 +19,8 @@ export class FileUploadService {
       ),
     );
   }
+
+  public resolveApiUrl(path: string): string {
+    return new URL(path, `${this._apiBaseUrl}/`).toString();
+  }
 }

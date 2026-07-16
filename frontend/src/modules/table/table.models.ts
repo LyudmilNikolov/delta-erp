@@ -1,4 +1,5 @@
 export interface ProcessedExcelResponse {
+  source_filename: string;
   sheet_name: string;
   row_count: number;
   excel_file: string;
@@ -6,7 +7,7 @@ export interface ProcessedExcelResponse {
     ground_meats: string[];
     seasoned: string[];
   };
-  warnings: string[];
+  warnings: ProcessingWarning[];
   details: DetailRow[];
   sheet1: SheetSummaryRow[];
   pivots: {
@@ -14,6 +15,12 @@ export interface ProcessedExcelResponse {
     all_kg: PivotRow[];
   };
   sample_note?: string;
+}
+
+export interface ProcessingWarning {
+  row: number;
+  message: string;
+  product_name: string;
 }
 
 export interface DetailRow {

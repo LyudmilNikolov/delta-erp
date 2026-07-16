@@ -31,18 +31,23 @@ def client(output_dir):
         yield test_client
 
 
-def _excel_bytes(sheet_name: str = "Microinvest", valid: bool = True) -> bytes:
+def _excel_bytes(
+    sheet_name: str = "Microinvest",
+    valid: bool = True,
+    product_name: str = "Кайма 500 гр",
+    unit: str = "бр",
+) -> bytes:
     if valid:
         df = pd.DataFrame(
             [
                 {
                     "Дата": "01.05.2026",
                     "Код": 123,
-                    "Стока": "Кайма 500 гр",
+                    "Стока": product_name,
                     "Група": "Стоки",
                     "Партида": "BATCH-1",
                     "Количество": 2,
-                    "Мярка": "бр",
+                    "Мярка": unit,
                     "Документ №": "DOC-1",
                     "Партньор": "Partner",
                     "Група.1": "Partner group",
@@ -74,9 +79,11 @@ def test_process_valid_excel_returns_payload_and_download(client):
 
     assert response.status_code == 200
     payload = response.json()
+    assert payload["source_filename"] == "input.xlsx"
     assert payload["sheet_name"] == "Microinvest"
     assert payload["row_count"] == 1
-    assert payload["excel_file"].startswith("/download/")
+    assert payload["excel_file"].startswith("/download/Processed_input_")
+    assert payload["excel_file"].endswith(".xlsx")
     assert isinstance(payload["warnings"], list)
     assert len(payload["details"]) == 1
     assert len(payload["sheet1"]) == 1
@@ -87,6 +94,19 @@ def test_process_valid_excel_returns_payload_and_download(client):
     assert download_response.status_code == 200
     assert download_response.headers["content-type"] == EXCEL_MIME
     assert download_response.content
+
+
+def test_process_returns_structured_warnings(client):
+    response = _post_excel(client, _excel_bytes(unit="литър"))
+
+    assert response.status_code == 200
+    assert response.json()["warnings"] == [
+        {
+            "row": 2,
+            "message": "Unsupported unit 'литър'.",
+            "product_name": "Кайма 500 гр",
+        }
+    ]
 
 
 def test_process_rejects_invalid_extension(client):

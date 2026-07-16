@@ -30,6 +30,7 @@ Multipart form upload:
 
 Successful responses include:
 
+- `source_filename`
 - `sheet_name`
 - `row_count`
 - `excel_file`

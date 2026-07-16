@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import time
 import uuid
@@ -87,6 +88,16 @@ def _remove_file(path: str) -> None:
         logger.warning("Could not remove file: %s", path, exc_info=True)
 
 
+def _source_filename(filename: str | None) -> str:
+    return os.path.basename((filename or "workbook.xlsx").replace("\\", "/"))
+
+
+def _result_filename(source_filename: str) -> str:
+    source_stem = os.path.splitext(source_filename)[0]
+    safe_stem = re.sub(r"[^\w.-]+", "_", source_stem).strip("._")[:80]
+    return f"Processed_{safe_stem or 'workbook'}_{uuid.uuid4().hex[:8]}.xlsx"
+
+
 @app.exception_handler(RequestValidationError)
 async def request_validation_exception_handler(
     _request: Request,
@@ -112,14 +123,15 @@ async def process_excel(
         return api_error("Upload exactly one Excel file.", 400)
 
     file = files[0]
-    extension = os.path.splitext(file.filename or "")[1].lower()
+    source_filename = _source_filename(file.filename)
+    extension = os.path.splitext(source_filename)[1].lower()
     if extension not in ALLOWED_EXTENSIONS:
         await file.close()
         return api_error("Only .xls and .xlsx files are supported.", 400)
 
     upload_filename = f"{uuid.uuid4()}{extension}"
     upload_path = os.path.join(OUTPUT_DIR, upload_filename)
-    result_filename = f"{uuid.uuid4()}.xlsx"
+    result_filename = _result_filename(source_filename)
     result_path = os.path.join(OUTPUT_DIR, result_filename)
 
     try:
@@ -143,6 +155,7 @@ async def process_excel(
         await file.close()
 
     return {
+        "source_filename": source_filename,
         "sheet_name": result["sheet_name"],
         "row_count": len(result["details"]),
         "excel_file": f"/download/{result_filename}",

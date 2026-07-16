@@ -7,8 +7,7 @@ import { Router } from '@angular/router';
 import { TableDataService } from '../table/services/table-data';
 import { FileUploadService } from './services/file-upload';
 
-type UploadSource = 'browse' | 'drop';
-type UploadStatus = 'idle' | 'ready' | 'invalid';
+type UploadStatus = 'ready' | 'invalid';
 
 interface UploadFileDraft {
   file: File;
@@ -20,9 +19,7 @@ interface UploadFileDraft {
 }
 
 export interface UploadDraft {
-  source: UploadSource;
   status: UploadStatus;
-  createdAt: string;
   files: UploadFileDraft[];
   errors: string[];
 }
@@ -59,14 +56,14 @@ export class FileUpload {
 
   public onBrowseSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    this._setFiles(input.files, 'browse');
+    this._setFiles(input.files);
     input.value = '';
   }
 
   public onDrop(event: DragEvent): void {
     event.preventDefault();
     this.isDragging.set(false);
-    this._setFiles(event.dataTransfer?.files ?? null, 'drop');
+    this._setFiles(event.dataTransfer?.files ?? null);
   }
 
   public onDragOver(event: DragEvent): void {
@@ -91,7 +88,6 @@ export class FileUpload {
       currentDraft.files
         .filter((file) => file !== fileToRemove)
         .map((file) => file.file),
-      currentDraft.source,
     );
   }
 
@@ -139,11 +135,11 @@ export class FileUpload {
     return `${value.toFixed(value >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
   }
 
-  private _setFiles(files: FileList | null, source: UploadSource): void {
-    this._createDraft(files ? Array.from(files) : [], source);
+  private _setFiles(files: FileList | null): void {
+    this._createDraft(files ? Array.from(files) : []);
   }
 
-  private _createDraft(files: File[], source: UploadSource): void {
+  private _createDraft(files: File[]): void {
     const mappedFiles = files.map((file) => this._toFileDraft(file));
     const errors = this._validateFiles(mappedFiles);
 
@@ -154,9 +150,7 @@ export class FileUpload {
     }
 
     this.draft.set({
-      source,
       status: errors.length > 0 ? 'invalid' : 'ready',
-      createdAt: new Date().toISOString(),
       files: mappedFiles,
       errors,
     });
@@ -207,6 +201,6 @@ export class FileUpload {
       }
     }
 
-    return 'Could not upload this file. Check that the backend is running and try again.';
+    return 'Could not process this file. Please try again.';
   }
 }

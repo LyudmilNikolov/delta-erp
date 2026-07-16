@@ -1,12 +1,18 @@
 .upload-page {
   display: grid;
   gap: 16px;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 900px);
+  justify-content: center;
   padding: 16px;
 }
 
+.upload-page.has-details {
+  grid-template-columns: minmax(0, 1fr) 320px;
+  justify-content: stretch;
+}
+
 .upload-panel,
-.payload-panel {
+.file-details-panel {
   border-radius: 8px;
   padding: 20px;
 }
@@ -20,7 +26,7 @@
 }
 
 .upload-header h2,
-.payload-panel h3 {
+.file-details-panel h3 {
   font-size: 20px;
   line-height: 28px;
   margin: 0;
@@ -162,23 +168,23 @@
   font-size: 13px;
 }
 
-.payload-panel dl {
+.file-details-panel dl {
   display: grid;
   gap: 10px;
   margin: 16px 0 0;
 }
 
-.payload-panel dl div {
+.file-details-panel dl div {
   display: grid;
   gap: 3px;
 }
 
-.payload-panel dt {
+.file-details-panel dt {
   color: rgba(0, 0, 0, 0.58);
   font-size: 12px;
 }
 
-.payload-panel dd {
+.file-details-panel dd {
   margin: 0;
   overflow-wrap: anywhere;
 }

@@ -1,34 +1,99 @@
 <mat-card>
-  <header class="table-header">
+  @if (isLoading()) {
+  <mat-progress-bar mode="indeterminate" />
+  } @else {
+  <header class="result-header">
     <div>
-      <h2>{{ response()?.sheet_name || 'Processed Excel' }}</h2>
-      <p>
-        {{ fullData().length }} rows @if (response()?.excel_file) {
-        <span> / {{ response()?.excel_file }}</span>
-        }
-      </p>
+      <span class="result-status">Processing complete</span>
+      <h2>{{ response()?.source_filename }}</h2>
+      <p>Your processed Excel workbook is ready.</p>
     </div>
 
-    <button mat-stroked-button type="button" (click)="selection.clear()">
+    <div class="result-actions">
+      <button mat-stroked-button type="button" (click)="processAnotherFile()">
+        <mat-icon>upload_file</mat-icon>
+        Process another file
+      </button>
+      @if (downloadUrl()) {
+      <a mat-flat-button [href]="downloadUrl()">
+        <mat-icon>download</mat-icon>
+        Download Excel
+      </a>
+      }
+    </div>
+  </header>
+
+  <section class="result-summary" aria-label="Processing summary">
+    <div>
+      <span>Rows processed</span>
+      <strong>{{ response()?.row_count }}</strong>
+    </div>
+    <div>
+      <span>Warnings</span>
+      <strong>{{ warnings().length }}</strong>
+    </div>
+    <div>
+      <span>Output file</span>
+      <strong>{{ outputFilename() }}</strong>
+    </div>
+  </section>
+
+  @if (warnings().length > 0) {
+  <section class="warning-panel" aria-live="polite">
+    <header>
+      <mat-icon>warning_amber</mat-icon>
+      <div>
+        <h3>Review {{ warnings().length }} processing warning{{ warnings().length === 1 ? '' : 's' }}</h3>
+        <p>The downloaded workbook includes a complete Warnings sheet.</p>
+      </div>
+    </header>
+
+    <div class="warning-list">
+      @for (warning of visibleWarnings(); track warning.row + warning.message) {
+      <div class="warning-row">
+        <strong>Row {{ warning.row }}</strong>
+        <span>{{ warning.message }}</span>
+        <span>{{ warning.product_name || 'Product name unavailable' }}</span>
+      </div>
+      }
+    </div>
+
+    @if (warnings().length > visibleWarnings().length) {
+    <p class="warning-overflow">
+      {{ warnings().length - visibleWarnings().length }} more warning{{
+        warnings().length - visibleWarnings().length === 1 ? '' : 's'
+      }} in the downloaded workbook.
+    </p>
+    }
+  </section>
+  }
+
+  <div class="table-toolbar">
+    <div>
+      <h3>Processed data</h3>
+      <p>{{ fullData().length }} rows in this view</p>
+    </div>
+    <button
+      mat-stroked-button
+      type="button"
+      [disabled]="selection.isEmpty()"
+      (click)="selection.clear()"
+    >
       Clear selection
     </button>
-  </header>
+  </div>
 
   <mat-tab-group
     [selectedIndex]="views.indexOf(activeView())"
     (selectedIndexChange)="changeView(viewAt($event))"
   >
     <mat-tab label="Details" />
-    <mat-tab label="Sheet 1" />
+    <mat-tab label="Summary" />
     <mat-tab label="Seasoned" />
     <mat-tab label="All kg" />
   </mat-tab-group>
 
-  @if (isLoading()) {
-  <mat-progress-bar mode="indeterminate" />
-  } @else if (error()) {
-  <div class="table-state">{{ error() }}</div>
-  } @else if (!hasRows()) {
+  @if (!hasRows()) {
   <div class="table-state">No rows to display.</div>
   } @else {
   <div class="table-shell">
@@ -75,5 +140,5 @@
     [pageSizeOptions]="[5, 10, 20]"
     showFirstLastButtons
   />
-  }
+  } }
 </mat-card>

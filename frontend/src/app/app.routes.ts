@@ -1,12 +1,16 @@
 import { Routes } from '@angular/router';
-import { Dashboard } from '../modules/dashboard/dashboard';
 import { FileUpload } from '../modules/file-upload/file-upload';
 import { Table } from '../modules/table/table';
 
 export const routes: Routes = [
   {
+    path: '',
+    pathMatch: 'full',
+    redirectTo: 'file-upload',
+  },
+  {
     path: 'dashboard',
-    component: Dashboard,
+    redirectTo: 'file-upload',
   },
   {
     path: 'table',
@@ -18,6 +22,6 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: 'dashboard',
+    redirectTo: 'file-upload',
   },
 ];
