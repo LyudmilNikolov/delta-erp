@@ -1,16 +1,22 @@
-import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import { ProcessedExcelResponse } from '../../table/table.models';
 
 @Injectable({ providedIn: 'root' })
 export class FileUploadService {
-  // private http = inject(HttpClient)
+  private readonly _apiBaseUrl = 'http://127.0.0.1:8000';
+  private readonly _http = inject(HttpClient);
 
-  uploadFile(file: File): Promise<string> {
+  public uploadFile(file: File): Promise<ProcessedExcelResponse> {
     const formData = new FormData();
     formData.append('file', file);
 
-    // return this.http.post('/api/upload', formData).toPromise();
-
-    // Fake upload for demo
-    return Promise.resolve('test');
+    return firstValueFrom(
+      this._http.post<ProcessedExcelResponse>(
+        `${this._apiBaseUrl}/process`,
+        formData,
+      ),
+    );
   }
 }

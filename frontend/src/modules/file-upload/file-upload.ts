@@ -1,7 +1,11 @@
-import { Component, computed, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, computed, inject, signal } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { MatCard } from '@angular/material/card';
 import { MatIcon } from '@angular/material/icon';
+import { Router } from '@angular/router';
+import { TableDataService } from '../table/services/table-data';
+import { FileUploadService } from './services/file-upload';
 
 type UploadSource = 'browse' | 'drop';
 type UploadStatus = 'idle' | 'ready' | 'invalid';
@@ -31,13 +35,24 @@ export interface UploadDraft {
 })
 export class FileUpload {
   private readonly _allowedExtensions = new Set(['xls', 'xlsx']);
+  private readonly _fileUploadService = inject(FileUploadService);
+  private readonly _router = inject(Router);
+  private readonly _tableDataService = inject(TableDataService);
 
   public readonly draft = signal<UploadDraft | null>(null);
   public readonly isDragging = signal(false);
+  public readonly isUploading = signal(false);
+  public readonly uploadError = signal<string | null>(null);
 
   public readonly files = computed(() => this.draft()?.files ?? []);
-  public readonly errors = computed(() => this.draft()?.errors ?? []);
-  public readonly canSubmit = computed(() => this.draft()?.status === 'ready');
+  public readonly validationErrors = computed(() => this.draft()?.errors ?? []);
+  public readonly errors = computed(() => [
+    ...this.validationErrors(),
+    ...(this.uploadError() ? [this.uploadError() as string] : []),
+  ]);
+  public readonly canSubmit = computed(
+    () => this.draft()?.status === 'ready' && !this.isUploading(),
+  );
   public readonly totalSize = computed(() =>
     this.files().reduce((total, file) => total + file.size, 0),
   );
@@ -83,19 +98,30 @@ export class FileUpload {
   public clear(): void {
     this.draft.set(null);
     this.isDragging.set(false);
+    this.uploadError.set(null);
   }
 
-  public prepareUpload(): void {
+  public async upload(): Promise<void> {
     const currentDraft = this.draft();
 
     if (!currentDraft || currentDraft.status !== 'ready') {
       return;
     }
 
-    this.draft.set({
-      ...currentDraft,
-      createdAt: new Date().toISOString(),
-    });
+    this.isUploading.set(true);
+    this.uploadError.set(null);
+
+    try {
+      const response = await this._fileUploadService.uploadFile(
+        currentDraft.files[0].file,
+      );
+      this._tableDataService.setProcessedExcelResponse(response);
+      await this._router.navigate(['/table']);
+    } catch (error) {
+      this.uploadError.set(this._toUploadError(error));
+    } finally {
+      this.isUploading.set(false);
+    }
   }
 
   public fileSize(bytes: number): string {
@@ -123,6 +149,7 @@ export class FileUpload {
 
     if (mappedFiles.length === 0) {
       this.draft.set(null);
+      this.uploadError.set(null);
       return;
     }
 
@@ -133,6 +160,7 @@ export class FileUpload {
       files: mappedFiles,
       errors,
     });
+    this.uploadError.set(null);
   }
 
   private _toFileDraft(file: File): UploadFileDraft {
@@ -155,6 +183,10 @@ export class FileUpload {
       errors.push('Select an Excel file before continuing.');
     }
 
+    if (files.length > 1) {
+      errors.push('Upload one Excel file at a time.');
+    }
+
     const invalidFiles = files.filter(
       (file) => !this._allowedExtensions.has(file.extension),
     );
@@ -164,5 +196,17 @@ export class FileUpload {
     }
 
     return errors;
+  }
+
+  private _toUploadError(error: unknown): string {
+    if (error instanceof HttpErrorResponse) {
+      const backendError = error.error?.error;
+
+      if (typeof backendError === 'string' && backendError.length > 0) {
+        return backendError;
+      }
+    }
+
+    return 'Could not upload this file. Check that the backend is running and try again.';
   }
 }

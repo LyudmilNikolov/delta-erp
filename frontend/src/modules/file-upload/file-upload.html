@@ -3,7 +3,7 @@
     <header class="upload-header">
       <div>
         <h2>Upload Excel file</h2>
-        <p>Prepare a local upload draft for backend processing.</p>
+        <p>Send one Excel file for backend processing.</p>
       </div>
 
       @if (draft()) {
@@ -22,12 +22,11 @@
       <input
         type="file"
         accept=".xls,.xlsx"
-        multiple
         (change)="onBrowseSelected($event)"
       />
 
       <mat-icon>cloud_upload</mat-icon>
-      <strong>Drop Excel files here</strong>
+      <strong>Drop one Excel file here</strong>
       <span>or browse from your computer</span>
     </label>
 
@@ -80,27 +79,27 @@
         color="primary"
         type="button"
         [disabled]="!canSubmit()"
-        (click)="prepareUpload()"
+        (click)="upload()"
       >
-        Prepare upload
+        {{ isUploading() ? 'Uploading...' : 'Upload' }}
       </button>
       <span>
-        @if (canSubmit()) { Ready to send later. } @else { Choose a valid Excel
-        file. }
+        @if (isUploading()) { Sending file to backend. } @else if (canSubmit())
+        { Ready to upload. } @else { Choose a valid Excel file. }
       </span>
     </footer>
   </mat-card>
 
   @if (draft()) {
   <mat-card class="payload-panel">
-    <h3>Upload draft</h3>
+    <h3>Selected file</h3>
     <dl>
       <div>
         <dt>Status</dt>
-        <dd>{{ draft()?.status }}</dd>
+        <dd>{{ isUploading() ? 'uploading' : draft()?.status }}</dd>
       </div>
       <div>
-        <dt>Created</dt>
+        <dt>Selected</dt>
         <dd>{{ draft()?.createdAt }}</dd>
       </div>
       <div>

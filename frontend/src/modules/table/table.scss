@@ -61,9 +61,14 @@ mat-cell:first-of-type {
   padding-right: 4px;
 }
 
-mat-header-cell:nth-child(4),
-mat-cell:nth-child(4) {
-  flex: 2 1 280px;
+.mat-column-code {
+  flex: 0 0 96px;
+  max-width: 112px;
+}
+
+.mat-column-productName {
+  flex: 2 1 380px;
+  min-width: 320px;
 }
 
 @media (max-width: 720px) {

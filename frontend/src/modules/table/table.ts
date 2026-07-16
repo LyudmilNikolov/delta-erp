@@ -182,6 +182,14 @@ export class Table implements OnInit, OnDestroy {
   public readonly hasRows = computed(() => this.fullData().length > 0);
 
   public ngOnInit(): void {
+    const processedResponse = this._tableDataService.processedExcelResponse();
+
+    if (processedResponse) {
+      this.response.set(processedResponse);
+      this.isLoading.set(false);
+      return;
+    }
+
     void this._loadMockData();
   }
 
