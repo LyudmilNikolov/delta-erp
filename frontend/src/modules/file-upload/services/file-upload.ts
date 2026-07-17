@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { MOCK_EXAMPLE_OUTPUT_URL } from '../../table/table.mock';
 import { ProcessedExcelResponse } from '../../table/table.models';
 
 @Injectable({ providedIn: 'root' })
@@ -17,6 +18,12 @@ export class FileUploadService {
         `${this._apiBaseUrl}/process`,
         formData,
       ),
+    );
+  }
+
+  public loadMockData(): Promise<ProcessedExcelResponse> {
+    return firstValueFrom(
+      this._http.get<ProcessedExcelResponse>(MOCK_EXAMPLE_OUTPUT_URL),
     );
   }
 

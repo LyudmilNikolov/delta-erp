@@ -1,121 +1,167 @@
 <section class="upload-page" [class.has-details]="draft()">
-  <mat-card class="upload-panel">
-    <header class="upload-header">
-      <div>
-        <h2>Обработка на Excel файл</h2>
-        <p>Изберете Excel експорт от Microinvest.</p>
-      </div>
-
+  <mat-card class="upload-panel" appearance="outlined">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>upload_file</mat-icon>
+      <mat-card-title>Обработка на Excel файл</mat-card-title>
+      <mat-card-subtitle
+        >Изберете Excel експорт от Microinvest.</mat-card-subtitle
+      >
       @if (draft()) {
       <button mat-stroked-button type="button" (click)="clear()">
         <mat-icon>delete_outline</mat-icon>
         Изчисти
       </button>
       }
-    </header>
+    </mat-card-header>
 
-    <label
-      class="drop-zone"
-      [class.is-dragging]="isDragging()"
-      [class.has-file]="files().length > 0"
-      (drop)="onDrop($event)"
-      (dragover)="onDragOver($event)"
-      (dragleave)="onDragLeave($event)"
-    >
-      <input
-        type="file"
-        accept=".xls,.xlsx"
-        (change)="onBrowseSelected($event)"
-      />
-
-      <mat-icon>cloud_upload</mat-icon>
-      <strong>Пуснете Excel файла тук</strong>
-      <span>или щракнете, за да изберете файл</span>
-    </label>
-
-    @if (errors().length > 0) {
-    <div class="error-list">
-      @for (error of errors(); track error) {
-      <p>{{ error }}</p>
-      }
-    </div>
-    } @if (files().length > 0) {
-    <div class="file-summary">
-      <div>
-        <span
-          >Избран файл</span
-        >
-        <strong>{{ fileSize(totalSize()) }}</strong>
-      </div>
-      <span>Готов за обработка</span>
-    </div>
-
-    <div class="file-list">
-      @for (file of files(); track file.name + file.lastModified) {
-      <article class="file-row">
-        <mat-icon>description</mat-icon>
-        <div>
-          <strong>{{ file.name }}</strong>
-          <span
-            >{{ file.extension || 'файл' }} / {{ fileSize(file.size) }}</span
+    <mat-card-content>
+      <mat-card class="demo-data" appearance="outlined">
+        <mat-card-header>
+          <mat-icon mat-card-avatar>dataset</mat-icon>
+          <mat-card-title>Работа без backend</mat-card-title>
+          <mat-card-subtitle>
+            Отворете готов примерен набор от данни директно в таблицата.
+          </mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-actions align="end">
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="isLoadingMockData() || isUploading()"
+            (click)="useMockData()"
           >
-        </div>
-        <button
-          mat-icon-button
-          type="button"
-          aria-label="Премахване на файла"
-          (click)="removeFile(file)"
-        >
-          <mat-icon>close</mat-icon>
-        </button>
-      </article>
-      }
-    </div>
-    }
+            @if (isLoadingMockData()) {
+            <mat-spinner diameter="18" />
+            } @else {
+            <mat-icon>dataset</mat-icon>
+            } {{ isLoadingMockData() ? 'Зарежда се...' : 'Използвай демо данни'
+            }}
+          </button>
+        </mat-card-actions>
+      </mat-card>
 
-    <footer class="upload-actions">
+      <div class="upload-divider">
+        <mat-divider />
+        <span>или обработете собствен файл</span>
+        <mat-divider />
+      </div>
+
+      <label
+        class="drop-zone"
+        [class.is-dragging]="isDragging()"
+        [class.has-file]="files().length > 0"
+        (drop)="onDrop($event)"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+      >
+        <input
+          type="file"
+          accept=".xls,.xlsx"
+          (change)="onBrowseSelected($event)"
+        />
+
+        <mat-icon>cloud_upload</mat-icon>
+        <strong>Пуснете Excel файла тук</strong>
+        <span>или щракнете, за да изберете файл</span>
+      </label>
+
+      @if (errors().length > 0) {
+      <mat-card class="error-list" appearance="outlined" aria-live="assertive">
+        <mat-card-content>
+          @for (error of errors(); track error) {
+          <p><mat-icon>error_outline</mat-icon>{{ error }}</p>
+          }
+        </mat-card-content>
+      </mat-card>
+      } @if (files().length > 0) {
+      <div class="file-summary">
+        <div>
+          <span>Избран файл</span>
+          <strong>{{ fileSize(totalSize()) }}</strong>
+        </div>
+        <mat-chip-set aria-label="Състояние на файла">
+          <mat-chip
+            >{{ draft()?.status === 'ready' ? 'Готов' : 'Невалиден' }}</mat-chip
+          >
+        </mat-chip-set>
+      </div>
+
+      <mat-list class="file-list">
+        @for (file of files(); track file.name + file.lastModified) {
+        <mat-list-item>
+          <mat-icon matListItemIcon>description</mat-icon>
+          <span matListItemTitle>{{ file.name }}</span>
+          <span matListItemLine>
+            {{ file.extension || 'файл' }} / {{ fileSize(file.size) }}
+          </span>
+          <button
+            mat-icon-button
+            matListItemMeta
+            type="button"
+            aria-label="Премахване на файла"
+            (click)="removeFile(file)"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-list-item>
+        }
+      </mat-list>
+      }
+    </mat-card-content>
+
+    <mat-card-actions class="upload-actions">
       <button
-        mat-raised-button
-        color="primary"
+        mat-flat-button
         type="button"
         [disabled]="!canSubmit()"
         (click)="upload()"
       >
-        <mat-icon>{{ isUploading() ? 'progress_activity' : 'play_arrow' }}</mat-icon>
-        {{ isUploading() ? 'Обработва се...' : 'Обработи файла' }}
+        @if (isUploading()) {
+        <mat-spinner diameter="18" />
+        } @else {
+        <mat-icon>play_arrow</mat-icon>
+        } {{ isUploading() ? 'Обработва се...' : 'Обработи файла' }}
       </button>
       <span aria-live="polite">
         @if (isUploading()) { Създаване на резултатния файл... } @else if
         (canSubmit()) { Готов за обработка. } @else { Изберете валиден Excel
         файл. }
       </span>
-    </footer>
+    </mat-card-actions>
   </mat-card>
 
   @if (draft()) {
-  <mat-card class="file-details-panel">
-    <h3>Данни за файла</h3>
-    <dl>
-      <div>
-        <dt>Име</dt>
-        <dd>{{ files()[0].name }}</dd>
-      </div>
-      <div>
-        <dt>Размер</dt>
-        <dd>{{ fileSize(files()[0].size) }}</dd>
-      </div>
-      <div>
-        <dt>Формат</dt>
-        <dd>{{ files()[0].extension.toUpperCase() }}</dd>
-      </div>
-      <div>
-        <dt>Състояние</dt>
-        <dd>
-          @if (isUploading()) { Обработва се } @else if (draft()?.status ===
-          'ready') { Готов } @else { Проверете файла }
-        </dd>
-      </div>
-    </dl>
+  <mat-card class="file-details-panel" appearance="outlined">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>info</mat-icon>
+      <mat-card-title>Данни за файла</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-list>
+        <mat-list-item>
+          <span matListItemTitle>Име</span>
+          <span matListItemLine>{{ files()[0].name }}</span>
+        </mat-list-item>
+        <mat-divider />
+        <mat-list-item>
+          <span matListItemTitle>Размер</span>
+          <span matListItemLine>{{ fileSize(files()[0].size) }}</span>
+        </mat-list-item>
+        <mat-divider />
+        <mat-list-item>
+          <span matListItemTitle>Формат</span>
+          <span matListItemLine>{{ files()[0].extension.toUpperCase() }}</span>
+        </mat-list-item>
+        <mat-divider />
+        <mat-list-item>
+          <span matListItemTitle>Състояние</span>
+          <span matListItemLine>
+            @if (isUploading()) { Обработва се } @else if (draft()?.status ===
+            'ready') { Готов } @else { Проверете файла }
+          </span>
+        </mat-list-item>
+      </mat-list>
+    </mat-card-content>
   </mat-card>
   }
 </section>

@@ -12,6 +12,15 @@ ng serve
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
 
+## Using the UI without the backend
+
+On the file upload page, select **Използвай демо данни**. The UI loads
+`public/mock/example_output.json` locally and opens every results-table view
+without uploading a file or contacting the backend.
+
+To change the sample shown by the UI, replace that JSON file while preserving
+the `ProcessedExcelResponse` shape in `src/modules/table/table.models.ts`.
+
 ## Code scaffolding
 
 Angular CLI includes powerful code scaffolding tools. To generate a new component, run:

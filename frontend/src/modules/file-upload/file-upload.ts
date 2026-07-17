@@ -1,8 +1,17 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
-import { MatButton } from '@angular/material/button';
-import { MatCard } from '@angular/material/card';
-import { MatIcon } from '@angular/material/icon';
+import {
+  Component,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatIconModule } from '@angular/material/icon';
+import { MatListModule } from '@angular/material/list';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router } from '@angular/router';
 import { TableDataService } from '../table/services/table-data';
 import { FileUploadService } from './services/file-upload';
@@ -28,7 +37,15 @@ export interface UploadDraft {
   selector: 'app-file-upload',
   templateUrl: './file-upload.html',
   styleUrls: ['./file-upload.scss'],
-  imports: [MatButton, MatCard, MatIcon],
+  imports: [
+    MatButtonModule,
+    MatCardModule,
+    MatChipsModule,
+    MatDividerModule,
+    MatIconModule,
+    MatListModule,
+    MatProgressSpinnerModule,
+  ],
 })
 export class FileUpload {
   private readonly _allowedExtensions = new Set(['xls', 'xlsx']);
@@ -39,6 +56,7 @@ export class FileUpload {
   public readonly draft = signal<UploadDraft | null>(null);
   public readonly isDragging = signal(false);
   public readonly isUploading = signal(false);
+  public readonly isLoadingMockData = signal(false);
   public readonly uploadError = signal<string | null>(null);
 
   public readonly files = computed(() => this.draft()?.files ?? []);
@@ -117,6 +135,23 @@ export class FileUpload {
       this.uploadError.set(this._toUploadError(error));
     } finally {
       this.isUploading.set(false);
+    }
+  }
+
+  public async useMockData(): Promise<void> {
+    this.isLoadingMockData.set(true);
+    this.uploadError.set(null);
+
+    try {
+      const response = await this._fileUploadService.loadMockData();
+      this._tableDataService.setProcessedExcelResponse(response, true);
+      await this._router.navigate(['/table']);
+    } catch {
+      this.uploadError.set(
+        'Демо данните не могат да бъдат заредени. Опитайте отново.',
+      );
+    } finally {
+      this.isLoadingMockData.set(false);
     }
   }
 

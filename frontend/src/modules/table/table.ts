@@ -9,9 +9,13 @@ import {
   ViewChild,
 } from '@angular/core';
 import { SelectionModel } from '@angular/cdk/collections';
-import { MatCard } from '@angular/material/card';
 import { MatAnchor, MatButton } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import {
   MatCell,
   MatCellDef,
@@ -40,7 +44,6 @@ import {
   TableColumn,
   TableView,
 } from './table.models';
-
 type CellValue = string | number | boolean | null;
 
 interface TableRow {
@@ -53,7 +56,11 @@ interface TableRow {
   imports: [
     MatAnchor,
     MatButton,
-    MatCard,
+    MatCardModule,
+    MatChipsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
     MatIcon,
     MatTable,
     MatHeaderCell,
@@ -110,8 +117,13 @@ export class Table implements OnInit, OnDestroy {
   public readonly columnFilters = signal<Record<string, string>>({});
   public readonly selection = new SelectionModel<TableRow>(true, []);
   public readonly warnings = computed(() => this.response()?.warnings ?? []);
+  public readonly isMockData = this._tableDataService.isMockData;
   public readonly visibleWarnings = computed(() => this.warnings().slice(0, 5));
   public readonly downloadUrl = computed(() => {
+    if (this.isMockData()) {
+      return null;
+    }
+
     const path = this.response()?.excel_file;
     return path ? this._fileUploadService.resolveApiUrl(path) : null;
   });
@@ -170,9 +182,8 @@ export class Table implements OnInit, OnDestroy {
     const activeKeys = new Set(
       this.columns().map((column) => this._sharedFilterKey(column.key)),
     );
-    return [...activeKeys].filter(
-      (key) => filters[key]?.trim().length > 0,
-    ).length;
+    return [...activeKeys].filter((key) => filters[key]?.trim().length > 0)
+      .length;
   });
 
   public readonly fullData = computed<TableRow[]>(() => {
@@ -205,8 +216,7 @@ export class Table implements OnInit, OnDestroy {
   public readonly filteredData = computed(() => {
     const filters = this.columnFilters();
     const activeFilters = this.columns().filter(
-      (column) =>
-        filters[this._sharedFilterKey(column.key)]?.trim().length > 0,
+      (column) => filters[this._sharedFilterKey(column.key)]?.trim().length > 0,
     );
 
     if (activeFilters.length === 0) {
@@ -268,8 +278,7 @@ export class Table implements OnInit, OnDestroy {
     return this.views[index] ?? 'details';
   }
 
-  public onColumnFilterChange(columnKey: string, event: Event): void {
-    const value = (event.target as HTMLInputElement | HTMLSelectElement).value;
+  public onColumnFilterChange(columnKey: string, value: string): void {
     const filters = { ...this.columnFilters() };
     const filterKey = this._sharedFilterKey(columnKey);
 
@@ -287,9 +296,7 @@ export class Table implements OnInit, OnDestroy {
     return this.columnFilters()[this._sharedFilterKey(columnKey)] ?? '';
   }
 
-  public filterInputType(
-    column: TableColumn<TableRow>,
-  ): 'date' | 'search' {
+  public filterInputType(column: TableColumn<TableRow>): 'date' | 'search' {
     return column.type === 'date' ? 'date' : 'search';
   }
 

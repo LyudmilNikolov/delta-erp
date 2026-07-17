@@ -1,12 +1,17 @@
-<mat-card>
+<mat-card class="results-card" appearance="outlined">
   @if (isLoading()) {
-  <mat-progress-bar mode="indeterminate" />
+    <mat-progress-bar mode="indeterminate" />
   } @else {
   <header class="result-header">
     <div>
-      <span class="result-status">Обработката приключи</span>
+      <mat-chip-set aria-label="Състояние на обработката">
+        <mat-chip class="result-status">Обработката приключи</mat-chip>
+      </mat-chip-set>
       <h2>{{ response()?.source_filename }}</h2>
-      <p>Резултатният Excel файл е готов.</p>
+      <p>
+        @if (isMockData()) { Показват се локални демо данни — backend не е
+        необходим. } @else { Резултатният Excel файл е готов. }
+      </p>
     </div>
 
     <div class="result-actions">
@@ -24,55 +29,62 @@
   </header>
 
   <section class="result-summary" aria-label="Обобщение на обработката">
-    <div>
-      <span>Обработени редове</span>
-      <strong>{{ response()?.row_count }}</strong>
-    </div>
-    <div>
-      <span>Предупреждения</span>
-      <strong>{{ warnings().length }}</strong>
-    </div>
-    <div>
-      <span>Резултатен файл</span>
-      <strong>{{ outputFilename() }}</strong>
-    </div>
+    <mat-card appearance="outlined">
+      <mat-card-subtitle>Обработени редове</mat-card-subtitle>
+      <mat-card-title>{{ response()?.row_count }}</mat-card-title>
+    </mat-card>
+    <mat-card appearance="outlined">
+      <mat-card-subtitle>Предупреждения</mat-card-subtitle>
+      <mat-card-title>{{ warnings().length }}</mat-card-title>
+    </mat-card>
+    <mat-card appearance="outlined">
+      <mat-card-subtitle>Резултатен файл</mat-card-subtitle>
+      <mat-card-title>{{ outputFilename() }}</mat-card-title>
+    </mat-card>
   </section>
 
   @if (warnings().length > 0) {
-  <section class="warning-panel" aria-live="polite">
-    <header>
+  <mat-card class="warning-panel" appearance="outlined" aria-live="polite">
+    <mat-card-header>
       <mat-icon>warning_amber</mat-icon>
       <div>
-        <h3>Предупреждения за преглед: {{ warnings().length }}</h3>
-        <p>Пълният списък е включен в изтегления файл.</p>
+        <mat-card-title>
+          Предупреждения за преглед: {{ warnings().length }}
+        </mat-card-title>
+        <mat-card-subtitle>
+          Пълният списък е включен в изтегления файл.
+        </mat-card-subtitle>
       </div>
-    </header>
+    </mat-card-header>
 
-    <div class="warning-list">
-      @for (warning of visibleWarnings(); track warning.row + warning.message) {
-      <div class="warning-row">
-        <strong>Ред {{ warning.row }}</strong>
-        <span>{{ warning.message }}</span>
-        <span>{{ warning.product_name || 'Няма име на стоката' }}</span>
+    <mat-card-content>
+      <div class="warning-list">
+        @for (warning of visibleWarnings(); track warning.row + warning.message)
+        {
+        <div class="warning-row">
+          <strong>Ред {{ warning.row }}</strong>
+          <span>{{ warning.message }}</span>
+          <span>{{ warning.product_name || 'Няма име на стоката' }}</span>
+        </div>
+        }
       </div>
+
+      @if (warnings().length > visibleWarnings().length) {
+      <p class="warning-overflow">
+        Още {{ warnings().length - visibleWarnings().length }} предупреждения са
+        включени в изтегления файл.
+      </p>
       }
-    </div>
-
-    @if (warnings().length > visibleWarnings().length) {
-    <p class="warning-overflow">
-      Още {{ warnings().length - visibleWarnings().length }} предупреждения са
-      включени в изтегления файл.
-    </p>
-    }
-  </section>
+    </mat-card-content>
+  </mat-card>
   }
 
   <div class="table-toolbar">
     <div>
       <h3>Обработени данни</h3>
       <p>
-        @if (activeFilterCount() > 0) { {{ filteredData().length }} от
-        {{ fullData().length }} реда } @else { {{ fullData().length }} реда в
+        @if (activeFilterCount() > 0) { {{ filteredData().length }} от {{
+        fullData().length }} реда } @else { {{ fullData().length }} реда в
         текущия изглед }
       </p>
     </div>
@@ -135,26 +147,33 @@
           <div class="column-header">
             <span>{{ column.label }}</span>
             @if (column.type === 'boolean') {
-            <select
-              class="column-filter"
-              [attr.aria-label]="'Филтър по ' + column.label"
-              [value]="filterValue(column.key)"
-              (change)="onColumnFilterChange(column.key, $event)"
-            >
-              <option value="">Всички</option>
-              <option value="true">Да</option>
-              <option value="false">Не</option>
-            </select>
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>Филтър</mat-label>
+              <mat-select
+                [aria-label]="'Филтър по ' + column.label"
+                [value]="filterValue(column.key)"
+                (selectionChange)="
+                  onColumnFilterChange(column.key, $event.value)
+                "
+              >
+                <mat-option value="">Всички</mat-option>
+                <mat-option value="true">Да</mat-option>
+                <mat-option value="false">Не</mat-option>
+              </mat-select>
+            </mat-form-field>
             } @else {
-            <input
-              class="column-filter"
-              [type]="filterInputType(column)"
-              [placeholder]="filterPlaceholder(column)"
-              [attr.aria-label]="'Филтър по ' + column.label"
-              [value]="filterValue(column.key)"
-              autocomplete="off"
-              (input)="onColumnFilterChange(column.key, $event)"
-            />
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
+              <mat-label>{{ filterPlaceholder(column) }}</mat-label>
+              <input
+                #filterInput
+                matInput
+                [type]="filterInputType(column)"
+                [attr.aria-label]="'Филтър по ' + column.label"
+                [value]="filterValue(column.key)"
+                autocomplete="off"
+                (input)="onColumnFilterChange(column.key, filterInput.value)"
+              />
+            </mat-form-field>
             }
           </div>
         </mat-header-cell>
