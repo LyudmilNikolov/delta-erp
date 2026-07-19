@@ -1,5 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import sys
 from pathlib import Path
 
 from PyInstaller.utils.hooks import collect_submodules
@@ -16,6 +17,11 @@ hidden_imports = []
 for package in ("uvicorn", "openpyxl", "xlrd", "xlsxwriter"):
     hidden_imports.extend(collect_submodules(package))
 hidden_imports.extend(["multipart", "python_multipart"])
+tray_backend = {
+    "darwin": "pystray._darwin",
+    "win32": "pystray._win32",
+}.get(sys.platform, "pystray._xorg")
+hidden_imports.append(tray_backend)
 
 a = Analysis(
     [str(backend_dir / "desktop.py")],
@@ -42,7 +48,7 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=False,
-    console=True,
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

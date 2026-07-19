@@ -22,7 +22,7 @@ directory and reuses it on later runs.
 
 ## Build for Windows
 
-The `Build Windows application` GitHub Actions workflow builds and tests a
+The `Build DeliaERP for Windows` GitHub Actions workflow builds and tests a
 Windows x64 package on every relevant push. It can also be started manually from
 the repository's **Actions** tab.
 
@@ -34,9 +34,10 @@ After the workflow succeeds:
 4. Run `DeliaERP.exe` without moving it away from the accompanying `_internal`
    directory.
 
-The executable opens the application in the default browser. Its console window
-must remain open while the application is in use. Generated workbooks and the
-application log are stored under `%LOCALAPPDATA%\DeliaERP`.
+The executable opens the application in the default browser and continues to run
+in the Windows notification area. Use the DeliaERP tray icon to reopen the app or
+exit it cleanly. Generated workbooks and the application log are stored under
+`%LOCALAPPDATA%\DeliaERP`.
 
 Windows may show a SmartScreen warning because the demo executable is not code
 signed.

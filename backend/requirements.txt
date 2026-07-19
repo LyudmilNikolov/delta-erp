@@ -5,5 +5,7 @@ openpyxl
 xlsxwriter
 xlrd
 python-multipart  # for file uploads
+pystray>=0.19.5,<1
+Pillow>=10,<13
 pytest
 httpx
