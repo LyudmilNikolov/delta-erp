@@ -23,10 +23,10 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version-file: frontend/.node-version
 
@@ -39,7 +39,7 @@ jobs:
         run: node .yarn/releases/yarn-4.15.0.cjs run ng build --configuration production --progress=false
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           architecture: x64
@@ -117,7 +117,7 @@ jobs:
         run: Compress-Archive -Path "dist\DeltaERP\*" -DestinationPath "dist\DeltaERP-Windows-x64.zip"
 
       - name: Upload Windows package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: DeltaERP-Windows-x64
           path: dist/DeltaERP-Windows-x64.zip
