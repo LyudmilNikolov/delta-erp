@@ -1,9 +1,11 @@
 import os
 import re
 import shutil
+import sys
 import time
 import uuid
 import logging
+from pathlib import Path
 
 from fastapi import FastAPI, File, Form, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
@@ -16,8 +18,31 @@ from excel_processing import ProcessingError, dataframe_to_records, process_sour
 app = FastAPI(title="Delta ERP Backend")
 logger = logging.getLogger(__name__)
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
+BASE_DIR = Path(__file__).resolve().parent
+
+
+def _web_dir() -> Path:
+    configured_dir = os.getenv("DELTA_ERP_WEB_DIR")
+    if configured_dir:
+        return Path(configured_dir).resolve()
+    if getattr(sys, "frozen", False):
+        return Path(getattr(sys, "_MEIPASS")) / "web"
+    return BASE_DIR.parent / "frontend" / "dist" / "delta-erp" / "browser"
+
+
+def _output_dir() -> Path:
+    configured_dir = os.getenv("DELTA_ERP_DATA_DIR")
+    if configured_dir:
+        return Path(configured_dir).expanduser().resolve() / "outputs"
+    if getattr(sys, "frozen", False):
+        app_data = os.getenv("LOCALAPPDATA") or os.getenv("APPDATA")
+        data_root = Path(app_data) if app_data else Path.home() / ".delta-erp"
+        return data_root / "DeltaERP" / "outputs"
+    return BASE_DIR / "outputs"
+
+
+WEB_DIR = _web_dir()
+OUTPUT_DIR = str(_output_dir())
 DEFAULT_OUTPUT_TTL_SECONDS = 24 * 60 * 60
 DEFAULT_ALLOWED_ORIGINS = ("http://localhost:4200", "http://127.0.0.1:4200")
 ALLOWED_EXTENSIONS = {".xls", ".xlsx"}
@@ -193,4 +218,23 @@ async def download_file(filename: str):
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             filename=safe_filename,
         )
+    return api_error("Файлът не е намерен.", 404)
+
+
+@app.get("/{frontend_path:path}", include_in_schema=False)
+async def serve_frontend(frontend_path: str):
+    index_path = WEB_DIR / "index.html"
+    if not index_path.is_file():
+        return api_error("Потребителският интерфейс не е инсталиран.", 404)
+
+    requested_path = (WEB_DIR / frontend_path).resolve()
+    try:
+        requested_path.relative_to(WEB_DIR.resolve())
+    except ValueError:
+        return api_error("Невалиден път.", 400)
+
+    if frontend_path and requested_path.is_file():
+        return FileResponse(requested_path)
+    if not Path(frontend_path).suffix:
+        return FileResponse(index_path)
     return api_error("Файлът не е намерен.", 404)

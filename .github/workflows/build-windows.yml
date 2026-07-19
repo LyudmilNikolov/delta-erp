@@ -1,0 +1,125 @@
+name: Build Windows application
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/build-windows.yml"
+      - "backend/**"
+      - "frontend/**"
+      - "delta-erp.spec"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.node-version
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: node .yarn/releases/yarn-4.15.0.cjs install --immutable
+
+      - name: Build production frontend
+        working-directory: frontend
+        run: node .yarn/releases/yarn-4.15.0.cjs run ng build --configuration production --progress=false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          architecture: x64
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-build.txt
+
+      - name: Install Python dependencies
+        run: python -m pip install -r backend/requirements-build.txt
+
+      - name: Run backend tests
+        run: python -m pytest backend/tests -q
+
+      - name: Build Windows executable
+        run: python -m PyInstaller --noconfirm delta-erp.spec
+
+      - name: Smoke-test executable
+        shell: pwsh
+        run: |
+          $env:DELTA_ERP_NO_BROWSER = "1"
+          $env:DELTA_ERP_PORT = "8765"
+          $process = Start-Process -FilePath "dist\DeltaERP\DeltaERP.exe" -PassThru
+          $ready = $false
+
+          try {
+            for ($attempt = 0; $attempt -lt 120; $attempt++) {
+              if ($process.HasExited) {
+                throw "DeltaERP.exe exited before becoming ready."
+              }
+
+              try {
+                $response = Invoke-WebRequest -Uri "http://127.0.0.1:8765/" -UseBasicParsing
+                if ($response.StatusCode -eq 200 -and $response.Content -match "Delta ERP") {
+                  $ready = $true
+                  break
+                }
+              } catch {
+                Start-Sleep -Milliseconds 500
+              }
+            }
+
+            if (-not $ready) {
+              throw "DeltaERP.exe did not become ready within 60 seconds."
+            }
+
+            $api = Invoke-WebRequest -Uri "http://127.0.0.1:8765/docs" -UseBasicParsing
+            if ($api.StatusCode -ne 200) {
+              throw "The packaged API health check failed."
+            }
+
+            $form = @{ file = Get-Item "backend\data\5-9kg.xls" }
+            $result = Invoke-RestMethod -Uri "http://127.0.0.1:8765/process" -Method Post -Form $form
+            if ($result.row_count -le 0 -or -not $result.excel_file) {
+              throw "The packaged XLS processing check failed."
+            }
+
+            $download = Invoke-WebRequest -Uri ("http://127.0.0.1:8765" + $result.excel_file) -UseBasicParsing
+            if ($download.StatusCode -ne 200 -or $download.RawContentLength -le 0) {
+              throw "The packaged workbook download check failed."
+            }
+          } finally {
+            if (-not $process.HasExited) {
+              Stop-Process -Id $process.Id -Force
+            }
+
+            $logPath = Join-Path $env:LOCALAPPDATA "DeltaERP\delta-erp.log"
+            if (Test-Path $logPath) {
+              Get-Content $logPath
+            }
+          }
+
+      - name: Create client ZIP
+        shell: pwsh
+        run: Compress-Archive -Path "dist\DeltaERP\*" -DestinationPath "dist\DeltaERP-Windows-x64.zip"
+
+      - name: Upload Windows package
+        uses: actions/upload-artifact@v4
+        with:
+          name: DeltaERP-Windows-x64
+          path: dist/DeltaERP-Windows-x64.zip
+          if-no-files-found: error
+          retention-days: 14

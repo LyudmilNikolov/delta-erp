@@ -23,6 +23,8 @@
     "@angular/material": "^22.0.5",
     "@angular/platform-browser": "^22.0.7",
     "@angular/router": "^22.0.7",
+    "@fontsource/roboto": "^5.2.10",
+    "material-icons": "^1.13.14",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

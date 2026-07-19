@@ -55,6 +55,8 @@ Downloads a generated Excel file returned by `excel_file`.
 
 - `CORS_ALLOWED_ORIGINS`: comma-separated frontend origins. Defaults to `http://localhost:4200,http://127.0.0.1:4200`.
 - `OUTPUT_TTL_SECONDS`: generated file retention window in seconds. Defaults to `86400`. Set to `0` to disable cleanup.
+- `DELTA_ERP_DATA_DIR`: optional base directory for generated files. The packaged Windows app defaults to `%LOCALAPPDATA%\DeltaERP`.
+- `DELTA_ERP_WEB_DIR`: optional path to a compiled Angular browser directory.
 
 ## Frontend Integration Notes
 

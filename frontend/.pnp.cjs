@@ -41,6 +41,7 @@ const RAW_RUNTIME_STATE =
           ["@angular/platform-browser", "virtual:093110a9651422768c79185b5d3af6128ef4aec3c79eda5325eb01ebca93abfeb3ecc9623ff3300441590ed6e489202369e6ee0a9f4ddc88172bd76a8f6b1da3#npm:22.0.7"],\
           ["@angular/router", "virtual:093110a9651422768c79185b5d3af6128ef4aec3c79eda5325eb01ebca93abfeb3ecc9623ff3300441590ed6e489202369e6ee0a9f4ddc88172bd76a8f6b1da3#npm:22.0.7"],\
           ["@eslint/js", "npm:9.39.4"],\
+          ["@fontsource/roboto", "npm:5.2.10"],\
           ["@types/jasmine", "npm:5.1.8"],\
           ["angular-eslint", "virtual:093110a9651422768c79185b5d3af6128ef4aec3c79eda5325eb01ebca93abfeb3ecc9623ff3300441590ed6e489202369e6ee0a9f4ddc88172bd76a8f6b1da3#npm:22.1.0"],\
           ["dedupe", "npm:4.0.3"],\
@@ -53,6 +54,7 @@ const RAW_RUNTIME_STATE =
           ["karma-coverage", "npm:2.2.1"],\
           ["karma-jasmine", "virtual:093110a9651422768c79185b5d3af6128ef4aec3c79eda5325eb01ebca93abfeb3ecc9623ff3300441590ed6e489202369e6ee0a9f4ddc88172bd76a8f6b1da3#npm:5.1.0"],\
           ["karma-jasmine-html-reporter", "virtual:093110a9651422768c79185b5d3af6128ef4aec3c79eda5325eb01ebca93abfeb3ecc9623ff3300441590ed6e489202369e6ee0a9f4ddc88172bd76a8f6b1da3#npm:2.1.0"],\
+          ["material-icons", "npm:1.13.14"],\
           ["prettier", "npm:3.5.3"],\
           ["pretty-quick", "virtual:093110a9651422768c79185b5d3af6128ef4aec3c79eda5325eb01ebca93abfeb3ecc9623ff3300441590ed6e489202369e6ee0a9f4ddc88172bd76a8f6b1da3#npm:4.2.2"],\
           ["rxjs", "npm:7.8.2"],\
@@ -1759,6 +1761,15 @@ const RAW_RUNTIME_STATE =
           ["@eslint/core", "npm:0.17.0"],\
           ["@eslint/plugin-kit", "npm:0.4.1"],\
           ["levn", "npm:0.4.1"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["@fontsource/roboto", [\
+      ["npm:5.2.10", {\
+        "packageLocation": "../../../.yarn/berry/cache/@fontsource-roboto-npm-5.2.10-7b0c25dd7f-10c0.zip/node_modules/@fontsource/roboto/",\
+        "packageDependencies": [\
+          ["@fontsource/roboto", "npm:5.2.10"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -4737,6 +4748,7 @@ const RAW_RUNTIME_STATE =
           ["@angular/platform-browser", "virtual:093110a9651422768c79185b5d3af6128ef4aec3c79eda5325eb01ebca93abfeb3ecc9623ff3300441590ed6e489202369e6ee0a9f4ddc88172bd76a8f6b1da3#npm:22.0.7"],\
           ["@angular/router", "virtual:093110a9651422768c79185b5d3af6128ef4aec3c79eda5325eb01ebca93abfeb3ecc9623ff3300441590ed6e489202369e6ee0a9f4ddc88172bd76a8f6b1da3#npm:22.0.7"],\
           ["@eslint/js", "npm:9.39.4"],\
+          ["@fontsource/roboto", "npm:5.2.10"],\
           ["@types/jasmine", "npm:5.1.8"],\
           ["angular-eslint", "virtual:093110a9651422768c79185b5d3af6128ef4aec3c79eda5325eb01ebca93abfeb3ecc9623ff3300441590ed6e489202369e6ee0a9f4ddc88172bd76a8f6b1da3#npm:22.1.0"],\
           ["dedupe", "npm:4.0.3"],\
@@ -4749,6 +4761,7 @@ const RAW_RUNTIME_STATE =
           ["karma-coverage", "npm:2.2.1"],\
           ["karma-jasmine", "virtual:093110a9651422768c79185b5d3af6128ef4aec3c79eda5325eb01ebca93abfeb3ecc9623ff3300441590ed6e489202369e6ee0a9f4ddc88172bd76a8f6b1da3#npm:5.1.0"],\
           ["karma-jasmine-html-reporter", "virtual:093110a9651422768c79185b5d3af6128ef4aec3c79eda5325eb01ebca93abfeb3ecc9623ff3300441590ed6e489202369e6ee0a9f4ddc88172bd76a8f6b1da3#npm:2.1.0"],\
+          ["material-icons", "npm:1.13.14"],\
           ["prettier", "npm:3.5.3"],\
           ["pretty-quick", "virtual:093110a9651422768c79185b5d3af6128ef4aec3c79eda5325eb01ebca93abfeb3ecc9623ff3300441590ed6e489202369e6ee0a9f4ddc88172bd76a8f6b1da3#npm:4.2.2"],\
           ["rxjs", "npm:7.8.2"],\
@@ -6817,6 +6830,15 @@ const RAW_RUNTIME_STATE =
           ["negotiator", "npm:1.0.0"],\
           ["proc-log", "npm:6.1.0"],\
           ["ssri", "npm:13.0.1"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["material-icons", [\
+      ["npm:1.13.14", {\
+        "packageLocation": "../../../.yarn/berry/cache/material-icons-npm-1.13.14-14c674c83b-10c0.zip/node_modules/material-icons/",\
+        "packageDependencies": [\
+          ["material-icons", "npm:1.13.14"]\
         ],\
         "linkType": "HARD"\
       }]\

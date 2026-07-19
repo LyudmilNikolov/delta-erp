@@ -165,6 +165,30 @@ def test_download_returns_404_for_missing_file(client):
     assert response.json() == {"error": "Файлът не е намерен."}
 
 
+def test_frontend_serves_assets_and_spa_routes(client, tmp_path, monkeypatch):
+    web_dir = tmp_path / "web"
+    web_dir.mkdir()
+    (web_dir / "index.html").write_text(
+        "<html><title>Delta ERP</title></html>",
+        encoding="utf-8",
+    )
+    (web_dir / "main.js").write_text("console.log('Delta ERP');", encoding="utf-8")
+    monkeypatch.setattr(main, "WEB_DIR", web_dir)
+
+    index_response = client.get("/")
+    route_response = client.get("/table")
+    asset_response = client.get("/main.js")
+    missing_asset_response = client.get("/missing.js")
+
+    assert index_response.status_code == 200
+    assert "Delta ERP" in index_response.text
+    assert route_response.status_code == 200
+    assert route_response.text == index_response.text
+    assert asset_response.status_code == 200
+    assert asset_response.text == "console.log('Delta ERP');"
+    assert missing_asset_response.status_code == 404
+
+
 def test_cors_allows_local_frontend_origin(client):
     response = client.options(
         "/process",

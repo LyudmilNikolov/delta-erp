@@ -6,7 +6,6 @@ import { ProcessedExcelResponse } from '../../table/table.models';
 
 @Injectable({ providedIn: 'root' })
 export class FileUploadService {
-  private readonly _apiBaseUrl = 'http://127.0.0.1:8000';
   private readonly _http = inject(HttpClient);
 
   public uploadFile(file: File): Promise<ProcessedExcelResponse> {
@@ -15,7 +14,7 @@ export class FileUploadService {
 
     return firstValueFrom(
       this._http.post<ProcessedExcelResponse>(
-        `${this._apiBaseUrl}/process`,
+        '/process',
         formData,
       ),
     );
@@ -28,6 +27,6 @@ export class FileUploadService {
   }
 
   public resolveApiUrl(path: string): string {
-    return new URL(path, `${this._apiBaseUrl}/`).toString();
+    return new URL(path, window.location.origin).toString();
   }
 }

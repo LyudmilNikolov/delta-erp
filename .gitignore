@@ -2,12 +2,19 @@
 
 # Compiled output
 /dist
+/build
 /tmp
 /out-tsc
 /bazel-out
 
+# Python
+**/__pycache__/
+*.py[cod]
+
 # Node
 /node_modules
+/.runtime/
+/backend/delta-erp.log
 npm-debug.log
 yarn-error.log
 
