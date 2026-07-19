@@ -3,7 +3,7 @@ import {
   provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection,
 } from '@angular/core';
-import { provideHttpClient, withXhr } from '@angular/common/http';
+import { provideHttpClient } from '@angular/common/http';
 import { MatPaginatorIntl } from '@angular/material/paginator';
 import { provideRouter } from '@angular/router';
 
@@ -14,7 +14,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
-    provideHttpClient(withXhr()),
+    provideHttpClient(),
     provideRouter(routes),
     { provide: MatPaginatorIntl, useClass: BulgarianPaginatorIntl },
   ],
