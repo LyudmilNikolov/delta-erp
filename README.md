@@ -1,4 +1,4 @@
-# Delta ERP
+# DeliaERP
 
 ## Run locally
 
@@ -29,14 +29,14 @@ the repository's **Actions** tab.
 After the workflow succeeds:
 
 1. Open the workflow run in GitHub.
-2. Download the `DeltaERP-Windows-x64` artifact.
-3. Extract `DeltaERP-Windows-x64.zip` on the Windows computer.
-4. Run `DeltaERP.exe` without moving it away from the accompanying `_internal`
+2. Download the `DeliaERP-Windows-x64` artifact.
+3. Extract `DeliaERP-Windows-x64.zip` on the Windows computer.
+4. Run `DeliaERP.exe` without moving it away from the accompanying `_internal`
    directory.
 
 The executable opens the application in the default browser. Its console window
 must remain open while the application is in use. Generated workbooks and the
-application log are stored under `%LOCALAPPDATA%\DeltaERP`.
+application log are stored under `%LOCALAPPDATA%\DeliaERP`.
 
 Windows may show a SmartScreen warning because the demo executable is not code
 signed.

@@ -3625,9 +3625,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"delta-erp@workspace:.":
+"delia-erp@workspace:.":
   version: 0.0.0-use.local
-  resolution: "delta-erp@workspace:."
+  resolution: "delia-erp@workspace:."
   dependencies:
     "@angular-eslint/builder": "npm:^22.1.0"
     "@angular/build": "npm:^22.0.7"

@@ -7,7 +7,7 @@ from PyInstaller.utils.hooks import collect_submodules
 
 project_root = Path(SPECPATH)
 backend_dir = project_root / "backend"
-web_dir = project_root / "frontend" / "dist" / "delta-erp" / "browser"
+web_dir = project_root / "frontend" / "dist" / "delia-erp" / "browser"
 
 if not (web_dir / "index.html").is_file():
     raise SystemExit("Build the Angular frontend before running PyInstaller.")
@@ -37,7 +37,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name="DeltaERP",
+    name="DeliaERP",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -58,5 +58,5 @@ coll = COLLECT(
     strip=False,
     upx=False,
     upx_exclude=[],
-    name="DeltaERP",
+    name="DeliaERP",
 )

@@ -14,7 +14,7 @@
 # Node
 /node_modules
 /.runtime/
-/backend/delta-erp.log
+/backend/delia-erp.log
 npm-debug.log
 yarn-error.log
 

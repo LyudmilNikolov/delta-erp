@@ -15,29 +15,29 @@ from fastapi.responses import FileResponse, JSONResponse
 from excel_processing import ProcessingError, dataframe_to_records, process_source
 
 
-app = FastAPI(title="Delta ERP Backend")
+app = FastAPI(title="DeliaERP Backend")
 logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent
 
 
 def _web_dir() -> Path:
-    configured_dir = os.getenv("DELTA_ERP_WEB_DIR")
+    configured_dir = os.getenv("DELIA_ERP_WEB_DIR")
     if configured_dir:
         return Path(configured_dir).resolve()
     if getattr(sys, "frozen", False):
         return Path(getattr(sys, "_MEIPASS")) / "web"
-    return BASE_DIR.parent / "frontend" / "dist" / "delta-erp" / "browser"
+    return BASE_DIR.parent / "frontend" / "dist" / "delia-erp" / "browser"
 
 
 def _output_dir() -> Path:
-    configured_dir = os.getenv("DELTA_ERP_DATA_DIR")
+    configured_dir = os.getenv("DELIA_ERP_DATA_DIR")
     if configured_dir:
         return Path(configured_dir).expanduser().resolve() / "outputs"
     if getattr(sys, "frozen", False):
         app_data = os.getenv("LOCALAPPDATA") or os.getenv("APPDATA")
-        data_root = Path(app_data) if app_data else Path.home() / ".delta-erp"
-        return data_root / "DeltaERP" / "outputs"
+        data_root = Path(app_data) if app_data else Path.home() / ".delia-erp"
+        return data_root / "DeliaERP" / "outputs"
     return BASE_DIR / "outputs"
 
 

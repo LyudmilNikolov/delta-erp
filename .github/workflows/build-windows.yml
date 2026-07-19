@@ -1,4 +1,4 @@
-name: Build Windows application
+name: Build DeliaERP for Windows
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
       - ".github/workflows/build-windows.yml"
       - "backend/**"
       - "frontend/**"
-      - "delta-erp.spec"
+      - "delia-erp.spec"
 
 permissions:
   contents: read
@@ -55,25 +55,25 @@ jobs:
         run: python -m pytest backend/tests -q
 
       - name: Build Windows executable
-        run: python -m PyInstaller --noconfirm delta-erp.spec
+        run: python -m PyInstaller --noconfirm delia-erp.spec
 
       - name: Smoke-test executable
         shell: pwsh
         run: |
-          $env:DELTA_ERP_NO_BROWSER = "1"
-          $env:DELTA_ERP_PORT = "8765"
-          $process = Start-Process -FilePath "dist\DeltaERP\DeltaERP.exe" -PassThru
+          $env:DELIA_ERP_NO_BROWSER = "1"
+          $env:DELIA_ERP_PORT = "8765"
+          $process = Start-Process -FilePath "dist\DeliaERP\DeliaERP.exe" -PassThru
           $ready = $false
 
           try {
             for ($attempt = 0; $attempt -lt 120; $attempt++) {
               if ($process.HasExited) {
-                throw "DeltaERP.exe exited before becoming ready."
+                throw "DeliaERP.exe exited before becoming ready."
               }
 
               try {
                 $response = Invoke-WebRequest -Uri "http://127.0.0.1:8765/" -UseBasicParsing
-                if ($response.StatusCode -eq 200 -and $response.Content -match "Delta ERP") {
+                if ($response.StatusCode -eq 200 -and $response.Content -match "DeliaERP") {
                   $ready = $true
                   break
                 }
@@ -83,7 +83,7 @@ jobs:
             }
 
             if (-not $ready) {
-              throw "DeltaERP.exe did not become ready within 60 seconds."
+              throw "DeliaERP.exe did not become ready within 60 seconds."
             }
 
             $api = Invoke-WebRequest -Uri "http://127.0.0.1:8765/docs" -UseBasicParsing
@@ -106,7 +106,7 @@ jobs:
               Stop-Process -Id $process.Id -Force
             }
 
-            $logPath = Join-Path $env:LOCALAPPDATA "DeltaERP\delta-erp.log"
+            $logPath = Join-Path $env:LOCALAPPDATA "DeliaERP\delia-erp.log"
             if (Test-Path $logPath) {
               Get-Content $logPath
             }
@@ -114,12 +114,12 @@ jobs:
 
       - name: Create client ZIP
         shell: pwsh
-        run: Compress-Archive -Path "dist\DeltaERP\*" -DestinationPath "dist\DeltaERP-Windows-x64.zip"
+        run: Compress-Archive -Path "dist\DeliaERP\*" -DestinationPath "dist\DeliaERP-Windows-x64.zip"
 
       - name: Upload Windows package
         uses: actions/upload-artifact@v7
         with:
-          name: DeltaERP-Windows-x64
-          path: dist/DeltaERP-Windows-x64.zip
+          name: DeliaERP-Windows-x64
+          path: dist/DeliaERP-Windows-x64.zip
           if-no-files-found: error
           retention-days: 14

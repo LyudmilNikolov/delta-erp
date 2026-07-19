@@ -13,7 +13,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "delta-erp": {
+    "delia-erp": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -72,10 +72,10 @@
           },
           "configurations": {
             "production": {
-              "buildTarget": "delta-erp:build:production"
+              "buildTarget": "delia-erp:build:production"
             },
             "development": {
-              "buildTarget": "delta-erp:build:development"
+              "buildTarget": "delia-erp:build:development"
             }
           },
           "defaultConfiguration": "development"

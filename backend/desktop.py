@@ -20,7 +20,7 @@ PORT_ATTEMPTS = 20
 
 
 def _available_port() -> int:
-    configured_port = os.getenv("DELTA_ERP_PORT")
+    configured_port = os.getenv("DELIA_ERP_PORT")
     ports = [int(configured_port)] if configured_port else range(
         DEFAULT_PORT,
         DEFAULT_PORT + PORT_ATTEMPTS,
@@ -34,11 +34,11 @@ def _available_port() -> int:
                 continue
             return port
 
-    raise RuntimeError("Няма свободен локален порт за стартиране на Delta ERP.")
+    raise RuntimeError("Няма свободен локален порт за стартиране на DeliaERP.")
 
 
 def _open_browser_when_ready(url: str) -> None:
-    if os.getenv("DELTA_ERP_NO_BROWSER") == "1":
+    if os.getenv("DELIA_ERP_NO_BROWSER") == "1":
         return
 
     for _ in range(60):
@@ -51,7 +51,7 @@ def _open_browser_when_ready(url: str) -> None:
 
 
 def _configure_logging() -> Path:
-    log_path = Path(OUTPUT_DIR).parent / "delta-erp.log"
+    log_path = Path(OUTPUT_DIR).parent / "delia-erp.log"
     log_path.parent.mkdir(parents=True, exist_ok=True)
     logging.basicConfig(
         filename=log_path,
@@ -73,7 +73,7 @@ def main() -> int:
             daemon=True,
         ).start()
 
-        print(f"Delta ERP е стартиран на {url}", flush=True)
+        print(f"DeliaERP е стартиран на {url}", flush=True)
         print(
             "Затворете този прозорец, за да спрете приложението.",
             flush=True,
@@ -89,8 +89,8 @@ def main() -> int:
     except KeyboardInterrupt:
         return 0
     except Exception:
-        logging.exception("Delta ERP failed to start")
-        print("Delta ERP не може да бъде стартиран.", flush=True)
+        logging.exception("DeliaERP failed to start")
+        print("DeliaERP не може да бъде стартиран.", flush=True)
         print(f"Подробности: {log_path}", flush=True)
         if sys.stdin and sys.stdin.isatty():
             input("Натиснете Enter, за да затворите прозореца...")

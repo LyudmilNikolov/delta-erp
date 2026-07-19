@@ -20,7 +20,7 @@ cleanup() {
 
   if [[ -n "$BACKEND_PID" ]] && kill -0 "$BACKEND_PID" 2>/dev/null; then
     echo
-    echo "Stopping Delta ERP backend..."
+    echo "Stopping DeliaERP backend..."
     kill "$BACKEND_PID" 2>/dev/null || true
     wait "$BACKEND_PID" 2>/dev/null || true
   fi
@@ -169,7 +169,7 @@ echo "Checking frontend dependencies..."
   "$NODE_BIN" "$YARN_CLI" install --immutable
 )
 
-echo "Starting Delta ERP backend..."
+echo "Starting DeliaERP backend..."
 (
   cd "$BACKEND_DIR"
   "$VENV_DIR/bin/uvicorn" main:app --host 127.0.0.1 --port 8000
@@ -199,7 +199,7 @@ if [[ "$BACKEND_READY" != true ]]; then
 fi
 
 echo
-echo "Delta ERP is running:"
+echo "DeliaERP is running:"
 echo "  App:     http://127.0.0.1:4200/"
 echo "  Backend: http://127.0.0.1:8000/"
 echo "Press Ctrl+C to stop both services."
