@@ -53,6 +53,7 @@ GROUNDED_MEAT_TERMS = (
     "кебапчета",
     "бургер",
     "наденица",
+    "наденички",
     "селско",
 )
 SEASONED_TERMS = (
@@ -66,9 +67,36 @@ SEASONED_TERMS = (
     "кашкавал",
 )
 
+SEASONED_OR_GROUND_TYPES = {
+    "бут овк метро",
+    "бургер",
+    "горен билки",
+    "кайма",
+    "кашкавал",
+    "кебапче",
+    "кюфте",
+    "мг окр",
+    "мляно",
+    "наденица",
+    "пб окр",
+    "селско",
+    "спеър рибс",
+    "средиземн",
+    "стек билки",
+    "стек мед",
+    "стек овк",
+    "сувлаки",
+    "трюфел",
+    "филе окр",
+    "чили и лимон",
+    "шиш",
+    "шиш мед",
+    "шницел овк",
+}
+
 
 class ProcessingError(ValueError):
-    pass
+    """Expected workbook error that is safe to return as a client-facing 400."""
 
 
 def _clean_text(value: Any) -> str:
@@ -77,8 +105,142 @@ def _clean_text(value: Any) -> str:
     return re.sub(r"\s+", " ", str(value)).strip()
 
 
+def _normalize_identifier(value: Any) -> str:
+    text = _clean_text(_json_value(value))
+    return re.sub(r"\.0$", "", text)
+
+
+def _normalize_code(value: Any) -> str:
+    return _normalize_identifier(value)
+
+
+def _normalize_batch(value: Any) -> str:
+    batch = _normalize_identifier(value)
+    if not batch or batch.lower() in {"nan", "nat", "none", "null"}:
+        return "NA"
+    return batch
+
+
 def _excel_engine(path: str) -> str:
     return "xlrd" if os.path.splitext(path)[1].lower() == ".xls" else "openpyxl"
+
+
+def _leading_zero_width(number_format: Any) -> int | None:
+    format_text = _clean_text(number_format).split(";", maxsplit=1)[0]
+    format_text = re.sub(r'"[^"]*"|\[[^\]]*\]|\\.', "", format_text)
+    integer_format = format_text.split(".", maxsplit=1)[0]
+    zero_runs = re.findall(r"(?<![0#?])0{2,}(?![0#?])", integer_format)
+    return max((len(run) for run in zero_runs), default=None)
+
+
+def _format_excel_identifier(value: Any, number_format: Any = None) -> str:
+    width = _leading_zero_width(number_format)
+    if (
+        width is not None
+        and isinstance(value, (int, float, np.integer, np.floating))
+        and not isinstance(value, (bool, np.bool_))
+        and not pd.isna(value)
+        and float(value).is_integer()
+    ):
+        integer = int(value)
+        if integer < 0:
+            return f"-{abs(integer):0{width}d}"
+        return f"{integer:0{width}d}"
+    return _normalize_identifier(value)
+
+
+def _xlsx_displayed_codes(
+    source_path: str,
+    sheet_name: str,
+    header: int,
+    fallback_values: list[Any],
+) -> list[str]:
+    from openpyxl import load_workbook
+
+    workbook = load_workbook(source_path, data_only=True, read_only=True)
+    try:
+        worksheet = workbook[sheet_name]
+        header_row = header + 1
+        code_column = next(
+            (
+                cell.column
+                for cell in worksheet[header_row]
+                if _clean_text(cell.value) == "Код"
+            ),
+            None,
+        )
+        if code_column is None:
+            return [_normalize_code(value) for value in fallback_values]
+
+        displayed_codes = []
+        for offset, fallback in enumerate(fallback_values, start=1):
+            cell = worksheet.cell(row=header_row + offset, column=code_column)
+            value = fallback if cell.value is None else cell.value
+            displayed_codes.append(_format_excel_identifier(value, cell.number_format))
+        return displayed_codes
+    finally:
+        workbook.close()
+
+
+def _xls_displayed_codes(
+    source_path: str,
+    sheet_name: str,
+    header: int,
+    fallback_values: list[Any],
+) -> list[str]:
+    import xlrd
+
+    workbook = xlrd.open_workbook(source_path, formatting_info=True)
+    worksheet = workbook.sheet_by_name(sheet_name)
+    code_column = next(
+        (
+            column
+            for column in range(worksheet.ncols)
+            if _clean_text(worksheet.cell_value(header, column)) == "Код"
+        ),
+        None,
+    )
+    if code_column is None:
+        return [_normalize_code(value) for value in fallback_values]
+
+    displayed_codes = []
+    for offset, fallback in enumerate(fallback_values, start=1):
+        row = header + offset
+        if row >= worksheet.nrows:
+            displayed_codes.append(_normalize_code(fallback))
+            continue
+
+        cell = worksheet.cell(row, code_column)
+        value = fallback if cell.value in {None, ""} else cell.value
+        xf = workbook.xf_list[cell.xf_index]
+        excel_format = workbook.format_map.get(xf.format_key)
+        number_format = excel_format.format_str if excel_format else None
+        displayed_codes.append(_format_excel_identifier(value, number_format))
+    return displayed_codes
+
+
+def _displayed_codes(
+    source_path: str,
+    sheet_name: str,
+    header: int,
+    fallback_values: list[Any],
+) -> list[str]:
+    try:
+        if _excel_engine(source_path) == "xlrd":
+            return _xls_displayed_codes(
+                source_path,
+                sheet_name,
+                header,
+                fallback_values,
+            )
+        return _xlsx_displayed_codes(
+            source_path,
+            sheet_name,
+            header,
+            fallback_values,
+        )
+    except Exception:
+        return [_normalize_code(value) for value in fallback_values]
 
 
 def _read_sheet_with_detected_header(source_path: str, sheet_name: str) -> pd.DataFrame:
@@ -91,6 +253,12 @@ def _read_sheet_with_detected_header(source_path: str, sheet_name: str) -> pd.Da
         columns = set(str(column).strip() for column in df.columns)
         if REQUIRED_COLUMNS.issubset(columns):
             df.columns = [_clean_text(column) for column in df.columns]
+            df["Код"] = _displayed_codes(
+                source_path,
+                sheet_name,
+                header,
+                df["Код"].tolist(),
+            )
             return df
     raise ProcessingError(
         f"Листът „{sheet_name}“ не съдържа задължителните колони от Microinvest."
@@ -127,13 +295,33 @@ def parse_package_weight_kg(description: Any) -> float:
     if not desc:
         return np.nan
 
-    gram_match = re.search(r"(\d+(?:[\.,]\d+)?)\s*гр", desc)
-    if gram_match:
-        return float(gram_match.group(1).replace(",", ".")) / 1000
+    package_total_match = re.search(
+        r"(?<!\d)(0[\.,]\d{2,3})\s*/\s*\d+\s*бр",
+        desc,
+    )
+    if package_total_match:
+        return float(package_total_match.group(1).replace(",", "."))
+
+    multipack_match = re.search(
+        r"(?<![\d\.,])(\d+)\s*(?:бр\.?\s*)?(?:по|[xх×*])\s*"
+        r"(\d+(?:[\.,]\d+)?)\s*(кг|гр|г)?",
+        desc,
+    )
+    if multipack_match:
+        count = float(multipack_match.group(1))
+        item_weight = float(multipack_match.group(2).replace(",", "."))
+        unit = multipack_match.group(3)
+        if unit in {"гр", "г"} or (not unit and item_weight >= 10):
+            item_weight /= 1000
+        return count * item_weight
 
     kilo_match = re.search(r"(\d+(?:[\.,]\d+)?)\s*кг", desc)
     if kilo_match:
         return float(kilo_match.group(1).replace(",", "."))
+
+    gram_match = re.search(r"(\d+(?:[\.,]\d+)?)\s*гр", desc)
+    if gram_match:
+        return float(gram_match.group(1).replace(",", ".")) / 1000
 
     kg_match = re.search(r"(?<!\d)(0[\.,]\d{2,3})(?!\d)", desc)
     if kg_match:
@@ -144,6 +332,56 @@ def parse_package_weight_kg(description: Any) -> float:
 
 def infer_product_type(description: Any) -> str:
     desc = _clean_text(description).lower()
+
+    has_seasoning = any(term in desc for term in ("овк", "овкус", "билки"))
+    has_tenderizing = any(term in desc for term in ("окр", "окрех"))
+    has_honey = "мед" in desc and "горчица" in desc
+
+    if "трюфел" in desc:
+        return "трюфел"
+    if "спеър рибс" in desc:
+        return "спеър рибс"
+    if "средиземномор" in desc:
+        return "средиземн"
+    if "пилешко филе" in desc:
+        return "филе пилешко"
+    if "подбедрица" in desc:
+        return "подбедрица"
+    if "месо за готвене" in desc and has_tenderizing:
+        return "мг окр"
+    if "пържола" in desc and has_tenderizing:
+        return "пб окр"
+    if "филе" in desc and has_tenderizing:
+        return "филе окр"
+    if "шницел" in desc and has_seasoning:
+        return "шницел овк"
+    if "шиш" in desc and has_honey:
+        return "шиш мед"
+    if "стек" in desc and "горен бут" in desc and "билки" in desc:
+        return "горен билки"
+    if "стек" in desc and "плешка" in desc:
+        return "плешка"
+    if "стек" in desc and has_honey:
+        return "стек мед"
+    if "стек" in desc and has_seasoning:
+        return "стек билки"
+    if "шиш" in desc:
+        return "шиш"
+    if "обезкостен" in desc and "бут" in desc and has_seasoning:
+        return "стек билки"
+    if "селск" in desc and any(term in desc for term in ("кюфте", "кюфтета")):
+        return "селско"
+    if "наденич" in desc or "наденица" in desc:
+        return "наденица"
+    if "долно бутче" in desc:
+        return "дб"
+    if "месо за готвене" in desc:
+        return "мг"
+    if "стек" in desc:
+        return "стек"
+    if "обезкостен" in desc and "бут" in desc:
+        return "пб"
+
     for phrase, product_type in sorted(PHRASE_TO_TYPE.items(), key=lambda item: len(item[0]), reverse=True):
         if phrase in desc:
             return product_type
@@ -152,14 +390,18 @@ def infer_product_type(description: Any) -> str:
 
 def classify_group(group: Any) -> str:
     group_text = _clean_text(group).lower()
-    if "стоки" in group_text or "амадори" in group_text:
-        return "стока"
+    if any(term in group_text for term in ("стоки", "амадори", "патешко")):
+        return "стоки"
     return "произв"
 
 
-def is_seasoned_or_ground(description: Any) -> bool:
+def is_seasoned_or_ground(description: Any, product_type: Any = None) -> bool:
     desc = _clean_text(description).lower()
-    return any(term in desc for term in GROUNDED_MEAT_TERMS + SEASONED_TERMS)
+    normalized_type = _clean_text(product_type).lower()
+    return (
+        normalized_type in SEASONED_OR_GROUND_TYPES
+        or any(term in desc for term in GROUNDED_MEAT_TERMS + SEASONED_TERMS)
+    )
 
 
 def _convert_weight(row: pd.Series, row_number: int, warnings: list[dict[str, Any]]) -> float:
@@ -236,11 +478,11 @@ def normalize_microinvest(df: pd.DataFrame) -> tuple[pd.DataFrame, list[dict[str
 
     normalized = pd.DataFrame()
     normalized["date"] = pd.to_datetime(df["Дата"], dayfirst=True, errors="coerce")
-    normalized["code"] = df["Код"].apply(_json_value).astype(str).str.replace(r"\.0$", "", regex=True)
+    normalized["code"] = df["Код"].apply(_normalize_code)
     normalized["product_name"] = df["Стока"].apply(_clean_text)
     normalized["group"] = df.get("Група", "").apply(_clean_text)
     normalized["stock_type"] = df.get("Група", "").apply(classify_group)
-    normalized["batch"] = df.get("Партида", "").apply(_json_value).astype(str).str.replace(r"\.0$", "", regex=True)
+    normalized["batch"] = df.get("Партида", "").apply(_normalize_batch)
     normalized["quantity"] = pd.to_numeric(df["Количество"], errors="coerce")
     normalized["unit"] = df["Мярка"].apply(_clean_text)
     normalized["weight_kg"] = [
@@ -255,7 +497,13 @@ def normalize_microinvest(df: pd.DataFrame) -> tuple[pd.DataFrame, list[dict[str
     else:
         normalized["product_type"] = df["Стока"].apply(infer_product_type)
 
-    normalized["is_seasoned_or_ground"] = df["Стока"].apply(is_seasoned_or_ground)
+    normalized["is_seasoned_or_ground"] = [
+        is_seasoned_or_ground(description, product_type)
+        for description, product_type in zip(
+            normalized["product_name"],
+            normalized["product_type"],
+        )
+    ]
 
     optional_map = {
         "document_no": "Документ №",
@@ -293,11 +541,13 @@ def build_sheet1(normalized: pd.DataFrame) -> pd.DataFrame:
         "product_name": "Стока",
         "stock_type": "вид",
         "weight_kg": "Total",
-    }).sort_values(["Дата", "вид", "Стока"])
+    }).sort_values(["Дата", "Код", "Стока"])
 
 
 def build_pivot(df: pd.DataFrame, seasoned_only: bool) -> pd.DataFrame:
-    source = df[df["is_seasoned_or_ground"]] if seasoned_only else df
+    source = df[df["stock_type"].eq("произв")]
+    if seasoned_only:
+        source = source[source["is_seasoned_or_ground"]]
     pivot = source.pivot_table(
         index=["batch", "product_type"],
         values="weight_kg",

@@ -82,8 +82,8 @@ def test_process_valid_excel_returns_payload_and_download(client):
     assert payload["source_filename"] == "input.xlsx"
     assert payload["sheet_name"] == "Microinvest"
     assert payload["row_count"] == 1
-    assert payload["details"][0]["stock_type"] == "стока"
-    assert payload["sheet1"][0]["вид"] == "стока"
+    assert payload["details"][0]["stock_type"] == "стоки"
+    assert payload["sheet1"][0]["вид"] == "стоки"
     assert payload["excel_file"].startswith("/download/Резултат_input_")
     assert payload["excel_file"].endswith(".xlsx")
     assert isinstance(payload["warnings"], list)
